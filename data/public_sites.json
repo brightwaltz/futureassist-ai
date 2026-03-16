@@ -1,0 +1,108 @@
+{
+  "sites": [
+    {
+      "topic": "相続終活",
+      "title": "法務局 - 相続登記手続き",
+      "url": "https://houmukyoku.moj.go.jp/homu/page7_000001_00014.html",
+      "description": "不動産の相続登記に関する手続き案内",
+      "category": "法務",
+      "prefecture": null
+    },
+    {
+      "topic": "相続終活",
+      "title": "国税庁 - 相続税の申告",
+      "url": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/sozoku/souzokunavi.htm",
+      "description": "相続税に関する情報",
+      "category": "税務",
+      "prefecture": null
+    },
+    {
+      "topic": "相続終活",
+      "title": "日本公証人連合会 - 遺言",
+      "url": "https://www.koshonin.gr.jp/notary/ow01",
+      "description": "公正証書遺言の作成について",
+      "category": "法務",
+      "prefecture": null
+    },
+    {
+      "topic": "相続終活",
+      "title": "法テラス - 無料法律相談",
+      "url": "https://www.houterasu.or.jp/",
+      "description": "法的トラブルの総合案内所",
+      "category": "相談",
+      "prefecture": null
+    },
+    {
+      "topic": "介護と健康",
+      "title": "厚生労働省 - 介護保険制度",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/index.html",
+      "description": "介護保険制度の概要",
+      "category": "制度",
+      "prefecture": null
+    },
+    {
+      "topic": "介護と健康",
+      "title": "地域包括支援センター",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/chiiki-houkatsu/",
+      "description": "高齢者の総合相談窓口",
+      "category": "相談",
+      "prefecture": null
+    },
+    {
+      "topic": "介護と健康",
+      "title": "WAM NET - 介護サービス情報",
+      "url": "https://www.wam.go.jp/content/wamnet/pcpub/kaigo/",
+      "description": "介護サービス事業所の検索",
+      "category": "サービス",
+      "prefecture": null
+    },
+    {
+      "topic": "家庭問題",
+      "title": "よりそいホットライン",
+      "url": "https://www.since2011.net/yorisoi/",
+      "description": "24時間無料相談電話 0120-279-338",
+      "category": "相談",
+      "prefecture": null
+    },
+    {
+      "topic": "家庭問題",
+      "title": "配偶者暴力相談支援センター",
+      "url": "https://www.gender.go.jp/policy/no_violence/e-vaw/soudankikan/01.html",
+      "description": "DV相談窓口一覧",
+      "category": "相談",
+      "prefecture": null
+    },
+    {
+      "topic": "お金と資産",
+      "title": "金融庁 - NISA制度",
+      "url": "https://www.fsa.go.jp/policy/nisa2/",
+      "description": "NISA制度の概要",
+      "category": "資産形成",
+      "prefecture": null
+    },
+    {
+      "topic": "健康管理",
+      "title": "e-ヘルスネット",
+      "url": "https://www.e-healthnet.mhlw.go.jp/",
+      "description": "厚生労働省 健康情報サイト",
+      "category": "健康",
+      "prefecture": null
+    },
+    {
+      "topic": "仕事と生活",
+      "title": "厚生労働省 - 働き方改革",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000148322.html",
+      "description": "働き方改革に関する情報",
+      "category": "制度",
+      "prefecture": null
+    },
+    {
+      "topic": "仕事と生活",
+      "title": "ハローワーク",
+      "url": "https://www.hellowork.mhlw.go.jp/",
+      "description": "職業相談・紹介",
+      "category": "雇用",
+      "prefecture": null
+    }
+  ]
+}

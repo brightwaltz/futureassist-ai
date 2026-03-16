@@ -1,0 +1,200 @@
+{
+  "topics": {
+    "相続終活": {
+      "display_name": "相続・終活",
+      "description": "遺言、相続税、不動産登記等に関するコーチング対話",
+      "steps": {
+        "identify_concern": {
+          "system_instruction": "ユーザーの相続・終活に関する具体的な悩みを特定してください。",
+          "opening_messages": [
+            "相続や終活についてのご相談ですね。どのような場面で悩まれていますか？",
+            "例えば、遺言書の作成、相続税の心配、不動産の名義変更など、具体的に教えていただけますか？"
+          ],
+          "keywords": ["遺言", "相続税", "不動産", "登記", "遺産分割", "終活", "エンディングノート"]
+        },
+        "coaching_question": {
+          "system_instruction": "ユーザーの本質的なニーズを引き出すコーチング質問をしてください。",
+          "coaching_questions": [
+            "その中で、何を一番大切にしたいとお考えですか？",
+            "ご家族との関係で一番気になっていることは何ですか？",
+            "理想的な解決とは、どのような状態だと思いますか？",
+            "今すぐ取りかかれることと、時間がかかりそうなことを分けるとすると？"
+          ]
+        },
+        "guide_generation": {
+          "system_instruction": "ユーザーの悩みに合った公的機関の情報を具体的に案内してください。",
+          "intro_message": "以下の公的機関情報が参考になります：",
+          "default_sites": [
+            {
+              "title": "法務局 - 相続登記手続き",
+              "url": "https://houmukyoku.moj.go.jp/homu/page7_000001_00014.html",
+              "description": "不動産の相続登記に関する手続き案内"
+            },
+            {
+              "title": "国税庁 - 相続税の申告",
+              "url": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/sozoku/souzokunavi.htm",
+              "description": "相続税に関する情報"
+            },
+            {
+              "title": "日本公証人連合会 - 遺言",
+              "url": "https://www.koshonin.gr.jp/notary/ow01",
+              "description": "公正証書遺言の作成について"
+            },
+            {
+              "title": "法テラス - 無料法律相談",
+              "url": "https://www.houterasu.or.jp/",
+              "description": "法的トラブルの総合案内所"
+            }
+          ]
+        }
+      }
+    },
+    "介護と健康": {
+      "display_name": "介護・健康",
+      "description": "介護保険、地域支援、健康管理に関するコーチング対話",
+      "steps": {
+        "identify_concern": {
+          "system_instruction": "ユーザーの介護・健康に関する悩みを丁寧に聞き取ってください。",
+          "opening_messages": [
+            "介護や健康に関するご相談ですね。最近、介護に関してどんな不安がありますか？",
+            "ご自身の健康のこと、ご家族の介護のこと、どちらについてでしょうか？"
+          ],
+          "keywords": ["介護", "介護保険", "デイサービス", "訪問介護", "ケアマネ", "健康", "認知症"]
+        },
+        "coaching_question": {
+          "system_instruction": "介護負担の軽減や健康改善に向けた深い質問をしてください。",
+          "coaching_questions": [
+            "介護負担を軽減するために使えそうな支援は知っていますか？",
+            "今、一番助けが必要だと感じていることは何ですか？",
+            "ご家族や周りの方と、介護について話し合えていますか？",
+            "ご自身の健康管理で気をつけていることはありますか？"
+          ]
+        },
+        "guide_generation": {
+          "system_instruction": "介護・健康に関する公的支援情報を案内してください。",
+          "intro_message": "こちらの公的支援ページをご覧ください：",
+          "default_sites": [
+            {
+              "title": "厚生労働省 - 介護保険制度",
+              "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/index.html",
+              "description": "介護保険制度の概要"
+            },
+            {
+              "title": "地域包括支援センター",
+              "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/chiiki-houkatsu/",
+              "description": "高齢者の総合相談窓口"
+            },
+            {
+              "title": "WAM NET - 介護サービス情報",
+              "url": "https://www.wam.go.jp/content/wamnet/pcpub/kaigo/",
+              "description": "介護サービス事業所の検索"
+            }
+          ]
+        }
+      }
+    },
+    "家庭問題": {
+      "display_name": "家庭問題",
+      "description": "家族関係、DV相談、生活困窮等に関するコーチング対話",
+      "steps": {
+        "identify_concern": {
+          "system_instruction": "ユーザーの家庭問題について安全な環境で聞き取ってください。緊急性の判断も行ってください。",
+          "opening_messages": [
+            "家庭に関するご相談ですね。安心してお話しください。どのようなことでお悩みですか？"
+          ],
+          "keywords": ["家族", "夫婦", "離婚", "DV", "虐待", "生活困窮", "引きこもり"]
+        },
+        "coaching_question": {
+          "system_instruction": "安全と安心を最優先にしながら、解決の糸口を一緒に探してください。",
+          "coaching_questions": [
+            "今、安全な環境にいらっしゃいますか？",
+            "信頼できる方に相談されたことはありますか？",
+            "どのような支援があれば、状況が改善しそうですか？"
+          ]
+        },
+        "guide_generation": {
+          "system_instruction": "緊急性に応じた相談窓口を優先的に案内してください。",
+          "intro_message": "以下の相談窓口にご連絡いただけます：",
+          "default_sites": [
+            {
+              "title": "よりそいホットライン",
+              "url": "https://www.since2011.net/yorisoi/",
+              "description": "24時間無料相談電話 0120-279-338"
+            },
+            {
+              "title": "配偶者暴力相談支援センター",
+              "url": "https://www.gender.go.jp/policy/no_violence/e-vaw/soudankikan/01.html",
+              "description": "DV相談窓口一覧"
+            }
+          ]
+        }
+      }
+    },
+    "お金と資産": {
+      "display_name": "お金・資産管理",
+      "description": "NISA、年金、家計管理に関するコーチング対話",
+      "steps": {
+        "identify_concern": {
+          "system_instruction": "ユーザーのお金・資産に関する悩みを聞き取ってください。",
+          "opening_messages": [
+            "お金や資産管理についてのご相談ですね。具体的にどのような点が気になっていますか？"
+          ],
+          "keywords": ["NISA", "年金", "家計", "資産", "投資", "節約", "ローン"]
+        },
+        "coaching_question": {
+          "coaching_questions": [
+            "将来に向けて、お金に関して一番心配なことは何ですか？",
+            "現在の収支バランスについて、改善したい点はありますか？"
+          ]
+        },
+        "guide_generation": {
+          "intro_message": "以下の公的情報が参考になります：",
+          "default_sites": [
+            {
+              "title": "金融庁 - NISA制度",
+              "url": "https://www.fsa.go.jp/policy/nisa2/",
+              "description": "NISA制度の概要"
+            }
+          ]
+        }
+      }
+    },
+    "健康管理": {
+      "display_name": "健康管理",
+      "description": "健康管理全般に関するコーチング対話",
+      "steps": {
+        "identify_concern": {
+          "opening_messages": [
+            "健康管理についてのご相談ですね。最近、健康面で気になることはありますか？"
+          ],
+          "keywords": ["健康診断", "運動", "食事", "睡眠", "メンタルヘルス"]
+        },
+        "coaching_question": {
+          "coaching_questions": [
+            "健康面で特に改善したいと思っていることは何ですか？",
+            "日常生活で健康のために心がけていることはありますか？"
+          ]
+        },
+        "guide_generation": {
+          "intro_message": "以下の健康情報サイトが参考になります：",
+          "default_sites": [
+            {
+              "title": "e-ヘルスネット",
+              "url": "https://www.e-healthnet.mhlw.go.jp/",
+              "description": "厚生労働省 健康情報サイト"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "global_settings": {
+    "max_turns_per_step": 3,
+    "auto_advance_after_turns": true,
+    "fallback_message": "承知しました。もう少し詳しくお聞かせいただけますか？",
+    "closing_message": "本日のご相談は以上でしょうか？またいつでもご利用ください。",
+    "emergency_keywords": ["死にたい", "自殺", "命を絶つ"],
+    "emergency_response": "とても辛い状況なのですね。今すぐ「いのちの電話」(0120-783-556) にお電話ください。24時間対応しています。",
+    "supported_languages": ["ja"]
+  }
+}

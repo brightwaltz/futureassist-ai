@@ -1,0 +1,39 @@
+# Render Blueprint - FutureAssist AI
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: futureassist-ai
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: futureassist-db
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false  # Manual entry required
+      - key: AI_BACKEND
+        value: openai
+      - key: AI_MODEL
+        value: gpt-4-turbo
+      - key: APP_ENV
+        value: production
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: NODE_VERSION
+        value: "20.18.1"
+
+databases:
+  - name: futureassist-db
+    plan: free
+    region: oregon
+    databaseName: futureassist
+    postgresMajorVersion: 16
