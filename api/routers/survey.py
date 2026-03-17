@@ -1,14 +1,21 @@
 """
 Survey and Life Ability evaluation endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException
+import logging
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
+from api.models.orm import DEFAULT_TENANT_ID
 from api.models.schemas import (
     SurveySubmit, SurveyResponse, QuestionBankResponse,
 )
 from api.services.survey_service import SurveyService
+from api.services.logging_service import log_survey_responses
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/survey", tags=["survey"])
 
@@ -30,6 +37,7 @@ async def get_questions(
 @router.post("/life_ability", response_model=SurveyResponse, status_code=201)
 async def submit_life_ability_survey(
     data: SurveySubmit,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -37,15 +45,33 @@ async def submit_life_ability_survey(
     Computes life_ability_score and satisfaction_score automatically.
     """
     try:
-        survey = await service_submit(data, db)
+        service = SurveyService(db)
+        survey = await service.submit_survey(data)
+
+        # v2 logging: log per-question responses
+        try:
+            tenant_id = getattr(request.state, "tenant_id", None) or UUID(DEFAULT_TENANT_ID)
+            qa_list = [
+                {
+                    "question_id": a.question_id,
+                    "answer_value": a.value,
+                    "answer_numeric": float(a.value) if isinstance(a.value, (int, float)) else None,
+                }
+                for a in data.answers
+            ]
+            await log_survey_responses(
+                db,
+                tenant_id=tenant_id,
+                survey_id=survey.survey_id,
+                user_id=data.user_id,
+                questions_and_answers=qa_list,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log survey responses: {e}")
+
         return survey
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-async def service_submit(data: SurveySubmit, db: AsyncSession):
-    service = SurveyService(db)
-    return await service.submit_survey(data)
 
 
 @router.get("/history/{user_id}", response_model=list[SurveyResponse])

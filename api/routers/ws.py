@@ -4,14 +4,16 @@ Replaces the separate Node.js conversation engine.
 """
 import json
 import logging
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import async_session
 from api.config import get_settings
+from api.models.orm import DEFAULT_TENANT_ID
 from api.services.coaching_service import CoachingService, DIALOGUE_STATES
+from api.services.logging_service import log_conversation_start, log_message
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -176,6 +178,8 @@ async def coaching_websocket(ws: WebSocket):
     await ws.accept()
     session_id = None
     conversation_history = []  # Track conversation for AI context
+    conversation_id = None  # v2 logging
+    tenant_id = UUID(DEFAULT_TENANT_ID)  # default; could be resolved from headers later
 
     try:
         while True:
@@ -211,6 +215,29 @@ async def coaching_websocket(ws: WebSocket):
                 greeting = greetings.get(topic, "ご相談承ります。どのようなことでお悩みですか？お気軽にお話しください。")
 
                 conversation_history.append({"role": "assistant", "content": greeting})
+
+                # v2 logging: create conversation record
+                try:
+                    async with async_session() as db:
+                        conv = await log_conversation_start(
+                            db,
+                            tenant_id=tenant_id,
+                            session_id=UUID(session_id) if session_id else None,
+                            user_id=int(user_id) if user_id else None,
+                            channel="chat",
+                            topic=topic,
+                        )
+                        await log_message(
+                            db,
+                            conversation_id=conv.id,
+                            tenant_id=tenant_id,
+                            sender_type="assistant",
+                            content=greeting,
+                        )
+                        await db.commit()
+                        conversation_id = conv.id
+                except Exception as e:
+                    logger.warning(f"Failed to log conversation start: {e}")
 
                 await ws.send_json({
                     "type": "session_initialized",
@@ -260,6 +287,33 @@ async def coaching_websocket(ws: WebSocket):
                 session_states[session_id] = state
 
                 next_question = service._get_next_question(state["topic"], state)
+
+                # v2 logging: log user message and assistant response
+                if conversation_id:
+                    try:
+                        async with async_session() as db:
+                            nlp = {
+                                "emotion_label": emotion_label,
+                                "emotion_score": emotion_score,
+                            }
+                            await log_message(
+                                db,
+                                conversation_id=conversation_id,
+                                tenant_id=tenant_id,
+                                sender_type="user",
+                                content=text,
+                                nlp_annotations=nlp,
+                            )
+                            await log_message(
+                                db,
+                                conversation_id=conversation_id,
+                                tenant_id=tenant_id,
+                                sender_type="assistant",
+                                content=response_text,
+                            )
+                            await db.commit()
+                    except Exception as e:
+                        logger.warning(f"Failed to log messages: {e}")
 
                 await ws.send_json({
                     "type": "assistant_message",
