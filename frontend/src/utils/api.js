@@ -35,6 +35,11 @@ export const api = {
   // Users
   createUser: (data) => request("/users/", { method: "POST", body: JSON.stringify(data) }),
   getUser: (id) => request(`/users/${id}`),
+  loginUser: (data) => request("/users/login", { method: "POST", body: JSON.stringify(data) }),
+
+  // User conversations
+  getUserConversations: (userId, page = 1) => request(`/users/${userId}/conversations?page=${page}`),
+  getUserConversationDetail: (userId, convId) => request(`/users/${userId}/conversations/${convId}`),
 
   // Sessions
   createSession: (data) => request("/chat/session", { method: "POST", body: JSON.stringify(data) }),
@@ -92,6 +97,9 @@ export function createChatWebSocket(handlers = {}) {
         case "session_initialized":
           handlers.onSessionInit?.(payload);
           break;
+        case "session_resumed":
+          handlers.onSessionResumed?.(payload);
+          break;
         case "assistant_message":
           handlers.onMessage?.(payload);
           break;
@@ -125,6 +133,12 @@ export function createChatWebSocket(handlers = {}) {
       ws.send(JSON.stringify({
         type: "init_session",
         payload: { user_id: userId, topic, session_id: sessionId },
+      }));
+    },
+    resumeSession: (userId, conversationId) => {
+      ws.send(JSON.stringify({
+        type: "resume_session",
+        payload: { user_id: userId, conversation_id: conversationId },
       }));
     },
     sendMessage: (text) => {

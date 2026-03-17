@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../contexts/UserContext";
 import { api } from "../utils/api";
 import ScoreTrendChart from "../components/ScoreTrendChart";
 
@@ -20,23 +21,28 @@ function ScoreLevel({ score }) {
 }
 
 export default function MyDashboardPage() {
-  const [userId] = useState(1);
+  const { user } = useUser();
+  const userId = user?.id;
+  const navigate = useNavigate();
   const [wellbeing, setWellbeing] = useState(null);
   const [surveys, setSurveys] = useState([]);
+  const [recentConversations, setRecentConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (userId) loadData();
+  }, [userId]);
 
   async function loadData() {
     try {
-      const [wb, sv] = await Promise.allSettled([
+      const [wb, sv, convs] = await Promise.allSettled([
         api.getWellbeing(userId),
         api.getSurveyHistory(userId),
+        api.getUserConversations(userId, 1),
       ]);
       if (wb.status === "fulfilled") setWellbeing(wb.value);
       if (sv.status === "fulfilled") setSurveys(sv.value);
+      if (convs.status === "fulfilled") setRecentConversations((convs.value.items || []).slice(0, 3));
     } catch (err) {
       console.error("Dashboard data load failed:", err);
     } finally {
@@ -119,6 +125,35 @@ export default function MyDashboardPage() {
           subtitle="(低いほど良い)"
         />
       </div>
+
+      {/* Recent Conversations */}
+      {recentConversations.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">最近の相談</h3>
+            <Link to="/history" className="text-xs text-primary-600 hover:underline">
+              すべて見る
+            </Link>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {recentConversations.map((conv) => (
+              <div
+                key={conv.id}
+                className="px-6 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
+                onClick={() => navigate("/", { state: { resumeConversationId: conv.id } })}
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{conv.topic || "その他"}</p>
+                  <p className="text-xs text-gray-400">
+                    {conv.started_at ? new Date(conv.started_at).toLocaleString("ja-JP") : "---"}
+                  </p>
+                </div>
+                <span className="text-xs text-primary-600">続きから →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Score Trend Chart */}
       {surveys.length > 0 && (

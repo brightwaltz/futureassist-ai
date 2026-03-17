@@ -70,6 +70,60 @@ export default function useChat(userId) {
     wsRef.current = ws;
   }, [userId]);
 
+  const resume = useCallback((conversationId) => {
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+
+    setMessages([]);
+
+    const ws = createChatWebSocket({
+      onOpen: () => {
+        setIsConnected(true);
+        ws.resumeSession(userId, conversationId);
+      },
+      onSessionResumed: (payload) => {
+        setSessionId(payload.session_id);
+        setCurrentTopic(payload.topic);
+        setCurrentStep(payload.current_step);
+        setMessages(
+          (payload.messages || []).map((m) => ({
+            role: m.sender_type === "user" ? "user" : "assistant",
+            content: m.content,
+            timestamp: m.created_at,
+          }))
+        );
+      },
+      onMessage: (payload) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: payload.text,
+            suggestedLinks: payload.suggested_links || [],
+            nextQuestion: payload.next_question,
+            emotion: payload.emotion,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        setCurrentStep(payload.current_step);
+        setIsTyping(false);
+      },
+      onTyping: (typing) => setIsTyping(typing),
+      onSessionEnd: () => {
+        setIsConnected(false);
+        setSessionId(null);
+      },
+      onClose: () => setIsConnected(false),
+      onError: (msg) => {
+        console.error("Chat error:", msg);
+        setIsTyping(false);
+      },
+    });
+
+    wsRef.current = ws;
+  }, [userId]);
+
   const sendMessage = useCallback((text) => {
     if (!wsRef.current || !text.trim()) return;
 
@@ -150,6 +204,7 @@ export default function useChat(userId) {
     currentStep,
     sessionId,
     connect,
+    resume,
     sendMessage,
     sendMessageREST,
     endSession,

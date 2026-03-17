@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useUser } from "../contexts/UserContext";
 import SurveyForm from "../components/SurveyForm";
 
 export default function SurveyPage() {
-  const [userId] = useState(1); // Demo user
+  const { user } = useUser();
+  const userId = user?.id;
   const [result, setResult] = useState(null);
 
   if (result) {

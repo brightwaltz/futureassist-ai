@@ -20,6 +20,10 @@ class UserCreate(BaseModel):
     )
 
 
+class UserLogin(BaseModel):
+    email: str
+
+
 class UserResponse(BaseModel):
     id: int
     external_id: UUID

@@ -4,14 +4,17 @@ Replaces the separate Node.js conversation engine.
 """
 import json
 import logging
+from datetime import datetime
 from uuid import uuid4, UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from api.database import async_session
 from api.config import get_settings
-from api.models.orm import DEFAULT_TENANT_ID
+from api.models.orm import DEFAULT_TENANT_ID, User, Conversation
 from api.services.coaching_service import CoachingService, DIALOGUE_STATES
 from api.services.logging_service import log_conversation_start, log_message
 
@@ -175,6 +178,38 @@ def _enhanced_template_response(topic: str, state: dict, user_input: str) -> str
     return step_responses[idx]
 
 
+async def _validate_user_id(user_id) -> int | None:
+    """Validate that user_id corresponds to an existing user. Returns int or None."""
+    if user_id is None:
+        return None
+    try:
+        uid = int(user_id)
+    except (ValueError, TypeError):
+        return None
+    try:
+        async with async_session() as db:
+            result = await db.execute(select(User).where(User.id == uid))
+            if result.scalar_one_or_none():
+                return uid
+    except Exception as e:
+        logger.warning(f"Failed to validate user_id={user_id}: {e}")
+    return None
+
+
+async def _persist_state(conversation_id, state):
+    """Save session state to Conversation.metadata_ for persistence across restarts."""
+    if not conversation_id:
+        return
+    try:
+        async with async_session() as db:
+            conv = await db.get(Conversation, conversation_id)
+            if conv:
+                conv.metadata_ = state
+                await db.commit()
+    except Exception as e:
+        logger.warning(f"Failed to persist state: {e}")
+
+
 @router.websocket("/ws/chat")
 async def coaching_websocket(ws: WebSocket):
     """
@@ -182,8 +217,9 @@ async def coaching_websocket(ws: WebSocket):
     Protocol:
       Client → { type: "init_session", payload: { user_id, topic, session_id? } }
       Client → { type: "user_message", payload: { text } }
+      Client → { type: "resume_session", payload: { user_id, conversation_id } }
       Client → { type: "end_session", payload: {} }
-      Server → { type: "session_initialized"|"assistant_message"|"typing"|"error", payload }
+      Server → { type: "session_initialized"|"assistant_message"|"typing"|"session_resumed"|"error", payload }
     """
     await ws.accept()
     session_id = None
@@ -200,12 +236,15 @@ async def coaching_websocket(ws: WebSocket):
 
             if msg_type == "init_session":
                 session_id = payload.get("session_id") or str(uuid4())
-                user_id = payload.get("user_id")
+                raw_user_id = payload.get("user_id")
                 topic = payload.get("topic", "その他")
+
+                # Validate user exists in DB; use None if not found
+                validated_user_id = await _validate_user_id(raw_user_id)
 
                 state = {
                     "session_id": session_id,
-                    "user_id": user_id,
+                    "user_id": validated_user_id,
                     "topic": topic,
                     "current_step": "information_organizing",
                     "turn": 0,
@@ -233,7 +272,7 @@ async def coaching_websocket(ws: WebSocket):
                             db,
                             tenant_id=tenant_id,
                             session_id=UUID(session_id) if session_id else None,
-                            user_id=int(user_id) if user_id else None,
+                            user_id=validated_user_id,
                             channel="chat",
                             topic=topic,
                         )
@@ -249,6 +288,9 @@ async def coaching_websocket(ws: WebSocket):
                 except Exception as e:
                     logger.warning(f"Failed to log conversation start: {e}")
 
+                # Persist initial state
+                await _persist_state(conversation_id, state)
+
                 await ws.send_json({
                     "type": "session_initialized",
                     "payload": {
@@ -258,6 +300,104 @@ async def coaching_websocket(ws: WebSocket):
                         "current_step": "information_organizing",
                     },
                 })
+
+            elif msg_type == "resume_session":
+                raw_user_id = payload.get("user_id")
+                resume_conv_id = payload.get("conversation_id")
+
+                if not resume_conv_id:
+                    await ws.send_json({
+                        "type": "error",
+                        "payload": {"message": "conversation_id is required"},
+                    })
+                    continue
+
+                try:
+                    conv_uuid = UUID(str(resume_conv_id))
+                except (ValueError, TypeError):
+                    await ws.send_json({
+                        "type": "error",
+                        "payload": {"message": "Invalid conversation_id"},
+                    })
+                    continue
+
+                # Load conversation + messages from DB
+                try:
+                    async with async_session() as db:
+                        result = await db.execute(
+                            select(Conversation)
+                            .where(Conversation.id == conv_uuid)
+                            .options(selectinload(Conversation.messages))
+                        )
+                        conv = result.scalar_one_or_none()
+
+                    if not conv:
+                        await ws.send_json({
+                            "type": "error",
+                            "payload": {"message": "Conversation not found"},
+                        })
+                        continue
+
+                    # Verify user ownership
+                    validated_user_id = await _validate_user_id(raw_user_id)
+                    if conv.user_id and validated_user_id and conv.user_id != validated_user_id:
+                        await ws.send_json({
+                            "type": "error",
+                            "payload": {"message": "Conversation does not belong to user"},
+                        })
+                        continue
+
+                    # Restore session state
+                    session_id = str(uuid4())
+                    conversation_id = conv.id
+
+                    # Restore state from metadata_ or build a default
+                    if conv.metadata_ and isinstance(conv.metadata_, dict):
+                        state = dict(conv.metadata_)
+                        state["session_id"] = session_id
+                    else:
+                        state = {
+                            "session_id": session_id,
+                            "user_id": validated_user_id,
+                            "topic": conv.topic or "その他",
+                            "current_step": "information_organizing",
+                            "turn": 0,
+                        }
+
+                    session_states[session_id] = state
+
+                    # Restore conversation history from DB messages
+                    conversation_history = []
+                    sorted_msgs = sorted(
+                        conv.messages,
+                        key=lambda m: m.created_at or datetime.min,
+                    )
+                    messages_payload = []
+                    for m in sorted_msgs:
+                        role = "assistant" if m.sender_type == "assistant" else "user"
+                        conversation_history.append({"role": role, "content": m.content})
+                        messages_payload.append({
+                            "sender_type": m.sender_type,
+                            "content": m.content,
+                            "created_at": m.created_at.isoformat() if m.created_at else None,
+                        })
+
+                    await ws.send_json({
+                        "type": "session_resumed",
+                        "payload": {
+                            "session_id": session_id,
+                            "topic": state.get("topic", conv.topic),
+                            "current_step": state.get("current_step", "information_organizing"),
+                            "messages": messages_payload,
+                        },
+                    })
+
+                except Exception as e:
+                    logger.error(f"Failed to resume session: {e}", exc_info=True)
+                    await ws.send_json({
+                        "type": "error",
+                        "payload": {"message": "Failed to resume session"},
+                    })
 
             elif msg_type == "user_message":
                 if not session_id or session_id not in session_states:
@@ -324,6 +464,9 @@ async def coaching_websocket(ws: WebSocket):
                             await db.commit()
                     except Exception as e:
                         logger.warning(f"Failed to log messages: {e}")
+
+                # Persist state after each message
+                await _persist_state(conversation_id, state)
 
                 await ws.send_json({
                     "type": "assistant_message",

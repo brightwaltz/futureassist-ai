@@ -1,8 +1,11 @@
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
+import { useUser } from "./contexts/UserContext";
 import ChatPage from "./pages/ChatPage";
 import SurveyPage from "./pages/SurveyPage";
 import MyDashboardPage from "./pages/MyDashboardPage";
+import ConversationHistoryPage from "./pages/ConversationHistoryPage";
+import AuthPage from "./pages/AuthPage";
 import AdminLogin from "./admin/AdminLogin";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -13,6 +16,12 @@ import AdminAnalysis from "./admin/AdminAnalysis";
 import TenantLayout from "./TenantLayout";
 
 function MainLayout() {
+  const { user, logout } = useUser();
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -30,26 +39,43 @@ function MainLayout() {
                 Life Ability 実践プラットフォーム
               </span>
             </div>
-            <nav className="flex gap-4">
-              <Link
-                to="/"
-                className="text-sm text-gray-600 hover:text-primary-600 transition"
-              >
-                相談する
-              </Link>
-              <Link
-                to="/survey"
-                className="text-sm text-gray-600 hover:text-primary-600 transition"
-              >
-                アンケート
-              </Link>
-              <Link
-                to="/dashboard"
-                className="text-sm text-gray-600 hover:text-primary-600 transition"
-              >
-                ダッシュボード
-              </Link>
-            </nav>
+            <div className="flex items-center gap-4">
+              <nav className="flex gap-4">
+                <Link
+                  to="/"
+                  className="text-sm text-gray-600 hover:text-primary-600 transition"
+                >
+                  相談する
+                </Link>
+                <Link
+                  to="/survey"
+                  className="text-sm text-gray-600 hover:text-primary-600 transition"
+                >
+                  アンケート
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="text-sm text-gray-600 hover:text-primary-600 transition"
+                >
+                  ダッシュボード
+                </Link>
+                <Link
+                  to="/history"
+                  className="text-sm text-gray-600 hover:text-primary-600 transition"
+                >
+                  会話履歴
+                </Link>
+              </nav>
+              <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                <span className="text-sm text-gray-700">{user.name}</span>
+                <button
+                  onClick={logout}
+                  className="text-xs text-gray-400 hover:text-red-500 transition"
+                >
+                  ログアウト
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -60,6 +86,7 @@ function MainLayout() {
           <Route path="/" element={<ChatPage />} />
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/dashboard" element={<MyDashboardPage />} />
+          <Route path="/history" element={<ConversationHistoryPage />} />
         </Routes>
       </main>
     </div>
