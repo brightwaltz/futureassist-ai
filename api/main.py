@@ -16,7 +16,7 @@ from sqlalchemy import select
 
 from api.config import get_settings
 from api.database import engine, Base, async_session
-from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin
+from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis
 from api.models.orm import Tenant, DEFAULT_TENANT_ID
 from api.middleware.tenant import TenantMiddleware
 
@@ -95,6 +95,7 @@ app.include_router(metrics.router, prefix="/api")
 app.include_router(consent.router, prefix="/api")
 app.include_router(public_sites.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(analysis.router, prefix="/api")
 
 # ─── WebSocket ───
 app.include_router(ws.router)

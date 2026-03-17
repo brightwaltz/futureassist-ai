@@ -93,6 +93,26 @@ export async function exportSurveys(slug = "default") {
   window.URL.revokeObjectURL(url);
 }
 
+export async function summarizeConversations(slug = "default", params = {}) {
+  const res = await adminFetch(`/api/admin/${slug}/analysis/summarize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error("要約の生成に失敗しました");
+  return res.json();
+}
+
+export async function clusterConversations(slug = "default", params = {}) {
+  const res = await adminFetch(`/api/admin/${slug}/analysis/cluster`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error("クラスター分析に失敗しました");
+  return res.json();
+}
+
 export function logout() {
   sessionStorage.removeItem(STORAGE_KEY);
   window.location.href = "/admin";

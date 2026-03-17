@@ -1,18 +1,12 @@
 import React from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useParams } from "react-router-dom";
 import ChatPage from "./pages/ChatPage";
 import SurveyPage from "./pages/SurveyPage";
 import MyDashboardPage from "./pages/MyDashboardPage";
-import AdminLogin from "./admin/AdminLogin";
-import AdminLayout from "./admin/AdminLayout";
-import AdminDashboard from "./admin/AdminDashboard";
-import AdminConversations from "./admin/AdminConversations";
-import AdminConversationDetail from "./admin/AdminConversationDetail";
-import AdminSurveys from "./admin/AdminSurveys";
-import AdminAnalysis from "./admin/AdminAnalysis";
-import TenantLayout from "./TenantLayout";
 
-function MainLayout() {
+export default function TenantLayout() {
+  const { tenantSlug } = useParams();
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -27,24 +21,24 @@ function MainLayout() {
                 未来アシストAI
               </h1>
               <span className="text-xs text-gray-400 hidden sm:inline">
-                コンシェルジュ・コーチング
+                {tenantSlug}
               </span>
             </div>
             <nav className="flex gap-4">
               <Link
-                to="/"
+                to={`/t/${tenantSlug}`}
                 className="text-sm text-gray-600 hover:text-primary-600 transition"
               >
                 相談する
               </Link>
               <Link
-                to="/survey"
+                to={`/t/${tenantSlug}/survey`}
                 className="text-sm text-gray-600 hover:text-primary-600 transition"
               >
                 アンケート
               </Link>
               <Link
-                to="/dashboard"
+                to={`/t/${tenantSlug}/dashboard`}
                 className="text-sm text-gray-600 hover:text-primary-600 transition"
               >
                 ダッシュボード
@@ -63,22 +57,5 @@ function MainLayout() {
         </Routes>
       </main>
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/admin" element={<AdminLogin />} />
-      <Route path="/admin/:tenantSlug" element={<AdminLayout />}>
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="conversations" element={<AdminConversations />} />
-        <Route path="conversations/:conversationId" element={<AdminConversationDetail />} />
-        <Route path="surveys" element={<AdminSurveys />} />
-        <Route path="analysis" element={<AdminAnalysis />} />
-      </Route>
-      <Route path="/t/:tenantSlug/*" element={<TenantLayout />} />
-      <Route path="/*" element={<MainLayout />} />
-    </Routes>
   );
 }

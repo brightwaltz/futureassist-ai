@@ -36,10 +36,13 @@ class Settings(BaseSettings):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://") and "+asyncpg" not in url:
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # Neon requires sslmode=require
-        if "neon" in url and "sslmode" not in url:
-            separator = "&" if "?" in url else "?"
-            url = url + separator + "sslmode=require"
+        # Neon requires SSL; asyncpg uses 'ssl=require' (not 'sslmode')
+        if "neon" in url:
+            # Replace sslmode=require with ssl=require for asyncpg compatibility
+            url = url.replace("sslmode=require", "ssl=require")
+            if "ssl=" not in url:
+                separator = "&" if "?" in url else "?"
+                url = url + separator + "ssl=require"
         return url
 
     @property
