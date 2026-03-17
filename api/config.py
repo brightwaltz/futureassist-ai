@@ -38,11 +38,16 @@ class Settings(BaseSettings):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
         # Neon requires SSL; asyncpg uses 'ssl=require' (not 'sslmode')
         if "neon" in url:
-            # Replace sslmode=require with ssl=require for asyncpg compatibility
-            url = url.replace("sslmode=require", "ssl=require")
-            if "ssl=" not in url:
-                separator = "&" if "?" in url else "?"
-                url = url + separator + "ssl=require"
+            from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+            parsed = urlparse(url)
+            params = parse_qs(parsed.query, keep_blank_values=True)
+            # Remove params not supported by asyncpg
+            for drop in ('sslmode', 'channel_binding'):
+                params.pop(drop, None)
+            # Ensure ssl=require is present
+            params['ssl'] = ['require']
+            new_query = urlencode(params, doseq=True)
+            url = urlunparse(parsed._replace(query=new_query))
         return url
 
     @property
