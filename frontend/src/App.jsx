@@ -3,8 +3,14 @@ import { Routes, Route, Link } from "react-router-dom";
 import ChatPage from "./pages/ChatPage";
 import SurveyPage from "./pages/SurveyPage";
 import DashboardPage from "./pages/DashboardPage";
+import AdminLogin from "./admin/AdminLogin";
+import AdminLayout from "./admin/AdminLayout";
+import AdminDashboard from "./admin/AdminDashboard";
+import AdminConversations from "./admin/AdminConversations";
+import AdminConversationDetail from "./admin/AdminConversationDetail";
+import AdminSurveys from "./admin/AdminSurveys";
 
-export default function App() {
+function MainLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -55,5 +61,20 @@ export default function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/admin" element={<AdminLogin />} />
+      <Route path="/admin/:tenantSlug" element={<AdminLayout />}>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="conversations" element={<AdminConversations />} />
+        <Route path="conversations/:conversationId" element={<AdminConversationDetail />} />
+        <Route path="surveys" element={<AdminSurveys />} />
+      </Route>
+      <Route path="/*" element={<MainLayout />} />
+    </Routes>
   );
 }
