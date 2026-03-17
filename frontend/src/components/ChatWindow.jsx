@@ -26,10 +26,11 @@ export default function ChatWindow({
   };
 
   const stepLabels = {
-    identify_concern: "悩みの特定",
-    coaching_question: "コーチング",
-    guide_generation: "情報案内",
-    follow_up: "フォローアップ",
+    information_organizing: "情報整理",
+    decision_support: "意思決定支援",
+    action_bridging: "行動移行",
+    life_stability: "生活安定性",
+    resource_optimization: "リソース創出",
   };
 
   return (

@@ -4,6 +4,48 @@ Scoring algorithms for Life Ability and Satisfaction indices.
 from typing import Optional
 
 
+# ─── Life Ability 5-Element Weights ───
+
+LIFE_ABILITY_WEIGHTS = {
+    "information_organizing": 0.20,   # ① 情報整理力
+    "decision_satisfaction": 0.25,    # ② 意思決定納得度（中核指標）
+    "action_bridging": 0.20,          # ③ 行動移行力
+    "life_stability": 0.20,           # ④ 生活運用安定性
+    "resource_optimization": 0.15,    # ⑤ 可処分リソース創出力
+}
+
+
+def compute_life_ability_5elements(answers: list[dict]) -> dict:
+    """
+    Compute 5-element Life Ability scores and weighted total.
+    Each element: 0-100, total: weighted average 0-100.
+
+    Each answer dict should have:
+      - "element": one of the LIFE_ABILITY_WEIGHTS keys
+      - "value": numeric value (Likert 1-5)
+    """
+    element_scores = {}
+    for element_key in LIFE_ABILITY_WEIGHTS:
+        element_answers = [a for a in answers if a.get("element") == element_key]
+        if element_answers:
+            total = sum(float(a["value"]) for a in element_answers if isinstance(a.get("value"), (int, float)))
+            max_possible = len(element_answers) * 5
+            element_scores[element_key] = round((total / max_possible) * 100, 2) if max_possible > 0 else None
+        else:
+            element_scores[element_key] = None
+
+    # Compute weighted total
+    available = {k: v for k, v in element_scores.items() if v is not None}
+    if available:
+        total_weight = sum(LIFE_ABILITY_WEIGHTS[k] for k in available)
+        weighted_sum = sum(v * LIFE_ABILITY_WEIGHTS[k] for k, v in available.items())
+        element_scores["total"] = round(weighted_sum / total_weight, 2)
+    else:
+        element_scores["total"] = None
+
+    return element_scores
+
+
 def compute_life_ability_score(answers: list[dict]) -> Optional[float]:
     """
     Compute Life Ability score from survey answers.

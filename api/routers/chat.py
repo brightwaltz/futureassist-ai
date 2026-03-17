@@ -33,7 +33,7 @@ async def create_session(
         session_id=uuid4(),
         user_id=data.user_id,
         topic=data.topic,
-        latest_state={"current_step": "identify_concern", "turn": 0},
+        latest_state={"current_step": "information_organizing", "turn": 0},
     )
     db.add(session)
     await db.flush()

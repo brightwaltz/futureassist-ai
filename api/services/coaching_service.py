@@ -1,6 +1,6 @@
 """
 Dialogue Concierge & Coaching Service.
-Implements 野口流対話構成 coaching methodology.
+Implements Life Ability 5-element coaching methodology.
 """
 import json
 import logging
@@ -18,24 +18,33 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
-# ─── Dialogue State Machine States ───
+# ─── Dialogue State Machine States (Life Ability 5-Element Flow) ───
 
 DIALOGUE_STATES = {
-    "identify_concern": {
-        "description": "ユーザーの悩み・関心を特定する",
-        "next": "coaching_question",
+    "information_organizing": {  # ① 情報整理力
+        "description": "悩み・不安を言語化し、事実・感情・制約条件に分離する",
+        "next": "decision_support",
+        "la_element": "情報整理力",
     },
-    "coaching_question": {
-        "description": "コーチング質問で深掘りする",
-        "next": "guide_generation",
+    "decision_support": {  # ② 意思決定納得度
+        "description": "価値基準と優先順位を明確化し、納得のいく選択を支援する",
+        "next": "action_bridging",
+        "la_element": "意思決定納得度",
     },
-    "guide_generation": {
-        "description": "公的サイト情報を案内する",
-        "next": "follow_up",
+    "action_bridging": {  # ③ 行動移行力
+        "description": "具体的な行動ステップと公的サイト情報を案内する",
+        "next": "life_stability",
+        "la_element": "行動移行力",
     },
-    "follow_up": {
-        "description": "追加の相談・別トピックへの移行",
-        "next": "identify_concern",
+    "life_stability": {  # ④ 生活運用安定性
+        "description": "長期的な視点でライフイベントへの対応力を確認する",
+        "next": "resource_optimization",
+        "la_element": "生活運用安定性",
+    },
+    "resource_optimization": {  # ⑤ 可処分リソース創出力
+        "description": "時間・費用・心理的余裕の確保について提案する",
+        "next": "information_organizing",  # cycle back
+        "la_element": "可処分リソース創出力",
     },
 }
 
@@ -74,7 +83,7 @@ class CoachingService:
                 session_id=session_id,
                 user_id=user_id,
                 topic=topic,
-                latest_state={"current_step": "identify_concern", "turn": 0},
+                latest_state={"current_step": "information_organizing", "turn": 0},
             )
             self.db.add(session)
             await self.db.flush()
@@ -123,50 +132,73 @@ class CoachingService:
     def build_system_prompt(self, topic: str, state: dict) -> str:
         """
         Build the system prompt for the AI model based on topic and state.
-        Implements 野口流対話構成 methodology.
+        Implements Life Ability 5-element methodology.
         """
-        current_step = state.get("current_step", "identify_concern")
+        current_step = state.get("current_step", "information_organizing")
 
-        base_prompt = """あなたは「未来アシストAI」のコンシェルジュ・コーチングAIです。
-ユーザーの悩みや関心に寄り添い、対話を通じて適切な公的情報へ案内します。
+        base_prompt = """あなたは「未来アシストAI」— Life Ability（意思決定の質）を高めるための実践AIです。
 
-# 対話の基本方針（野口流対話構成）
-1. まずユーザーの悩み・状況を丁寧に聞き取る
-2. コーチング的な質問で本質的なニーズを引き出す
-3. 適切な公的機関・サイトの情報を具体的に案内する
-4. 押し付けず、ユーザーの自己決定を支援する
+# Life Abilityとは
+Life Abilityとは、人生全体を対象に、情報・感情・選択肢を整理し、
+自分と家族にとって納得度の高い意思決定と生活運用を継続できる状態・能力です。
+
+# 5つの要素
+① 情報整理力: 迷い・不安を言語化し、事実／感情／制約条件を分離して論点を整理する
+② 意思決定納得度: 価値基準と優先順位を踏まえ、「自分で決めた」と言える選択を支援する
+③ 行動移行力: 決断を「次の一手」に変換し、制度・専門家・支援先へ最短接続する
+④ 生活運用安定性: 介護・相続・医療・家族問題への対応力を高め、判断停止を防ぐ
+⑤ 可処分リソース創出力: 可処分時間・可処分所得・心理的安全性を回復し、生活余力を増やす
+
+# 対話の方針
+1. まずユーザーの悩みを受け止め、「情報整理」を支援する（事実・感情・制約の分離）
+2. コーチング質問で価値基準と優先順位を明確化し、「意思決定の納得度」を高める
+3. 具体的な行動ステップと公的機関情報を提示し、「行動移行」を促す
+4. 長期的なライフイベント対応の視点を提供し、「生活運用の安定性」に寄与する
+5. 時間・コスト・心理的負担の軽減視点を常に意識し、「可処分リソースの創出」を意識する
 
 # 重要なルール
 - 法的・医療的な個別アドバイスは行わない
 - 必ず公的機関の情報を根拠として提示する
 - ユーザーの感情に配慮し、共感的な応答をする
+- 押し付けず、ユーザーの自己決定を支援する
 - プライバシーに配慮し、必要以上の個人情報を求めない
 """
 
         step_instructions = {
-            "identify_concern": """
-# 現在のフェーズ: 悩みの特定
-- オープンな質問でユーザーの状況を把握してください
-- 「どのような場面で悩まれていますか？」のような質問から始めてください
-- まだ公的サイトの案内は行わないでください
+            "information_organizing": """
+# 現在のフェーズ: 情報整理（Life Ability①）
+- ユーザーの悩みを受け止め、「何に悩んでいるのか」を整理する手助けをしてください
+- 事実（客観的状況）、感情（不安・焦りなど）、制約条件（時間・お金・人間関係）の3つに分けて整理してください
+- 「今、一番気になっていることは何ですか？」のようなオープンな質問から始めてください
+- まだ解決策や公的サイトの案内は行わないでください
 """,
-            "coaching_question": """
-# 現在のフェーズ: コーチング質問
-- ユーザーが何を一番大切にしたいかを引き出してください
-- 「何を一番大切にしたいですか？」のような深い質問をしてください
-- ユーザーの回答に基づいて、次に案内すべき情報を判断してください
+            "decision_support": """
+# 現在のフェーズ: 意思決定支援（Life Ability②）
+- ユーザーが「何を大切にしたいか」「何を優先するか」を自分で言語化できるよう支援してください
+- 「何を一番大切にしたいですか？」「理想的な結果はどのような状態ですか？」のような質問をしてください
+- ユーザーが自分で判断できるよう、選択肢を提示しつつ、決定はユーザーに委ねてください
+- 「自分で決めた」という納得感を持てるように対話を進めてください
 """,
-            "guide_generation": """
-# 現在のフェーズ: 公的サイト案内
-- ユーザーの悩みに合った公的機関の情報を具体的に案内してください
-- URLと簡単な説明を含めてください
-- 「以下の公的機関情報が参考になります」のように導入してください
+            "action_bridging": """
+# 現在のフェーズ: 行動移行支援（Life Ability③）
+- ユーザーの意思決定を具体的な「次の一歩」に変換してください
+- 関連する公的機関・制度・専門家の情報を具体的に案内してください（URLと説明を含む）
+- 「まず最初にできること」を1つ明確に提示してください
+- 行動のハードルを下げる提案を心がけてください
 """,
-            "follow_up": """
-# 現在のフェーズ: フォローアップ
-- 案内した情報で十分かどうか確認してください
-- 他に心配なことがないか聞いてください
-- 必要に応じて別のトピックへ誘導してください
+            "life_stability": """
+# 現在のフェーズ: 生活運用安定性（Life Ability④）
+- 今の悩みが長期的にどう影響しうるかを穏やかに確認してください
+- 「今後、似たような状況が起きたときの備え」について一緒に考えてください
+- 他の関連するライフイベント（介護、相続、健康、お金など）への波及も視野に入れてください
+- 判断停止や先送りを防ぐための「心の余裕」について触れてください
+""",
+            "resource_optimization": """
+# 現在のフェーズ: 可処分リソース創出（Life Ability⑤）
+- 時間・お金・心理的な余裕の観点から、負担を軽減できるポイントを提案してください
+- 「この手続きにかかる時間の目安」「無料で使える制度」などの実用情報を提供してください
+- 全体のまとめとして、今日の対話で整理できたことを振り返ってください
+- 他にも相談したいテーマがあるか確認してください
 """,
         }
 
@@ -187,10 +219,10 @@ class CoachingService:
 
     def advance_state(self, current_state: dict) -> dict:
         """Advance the dialogue state machine to the next step."""
-        current_step = current_state.get("current_step", "identify_concern")
+        current_step = current_state.get("current_step", "information_organizing")
         turn = current_state.get("turn", 0) + 1
 
-        next_step = DIALOGUE_STATES.get(current_step, {}).get("next", "identify_concern")
+        next_step = DIALOGUE_STATES.get(current_step, {}).get("next", "information_organizing")
 
         return {
             "current_step": next_step,
@@ -212,7 +244,7 @@ class CoachingService:
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
-        state = session.latest_state or {"current_step": "identify_concern", "turn": 0}
+        state = session.latest_state or {"current_step": "information_organizing", "turn": 0}
 
         # Store user message
         user_msg = Message(
@@ -226,9 +258,9 @@ class CoachingService:
         history = await self.get_conversation_history(session_id)
         system_prompt = self.build_system_prompt(session.topic, state)
 
-        # Get relevant public sites for guide_generation phase
+        # Get relevant public sites for action_bridging phase
         suggested_links = []
-        if state.get("current_step") == "guide_generation":
+        if state.get("current_step") == "action_bridging":
             sites = await self.find_relevant_sites(session.topic)
             suggested_links = sites
             # Add sites info to system prompt
@@ -315,27 +347,32 @@ class CoachingService:
         self, topic: str, state: dict, user_input: str
     ) -> str:
         """Fallback template-based response when AI is unavailable."""
-        step = state.get("current_step", "identify_concern")
+        step = state.get("current_step", "information_organizing")
 
         templates = {
-            "identify_concern": {
-                "相続終活": "相続や終活についてのご相談ですね。具体的にどのような点でお悩みですか？例えば、遺言の作成、相続税、不動産の相続登記などがございます。",
-                "介護と健康": "介護や健康に関するご相談ですね。最近、介護に関してどんな不安がありますか？",
+            "information_organizing": {
+                "相続終活": "相続や終活についてのご相談ですね。まずは状況を整理しましょう。具体的にどのような点でお悩みですか？例えば、遺言の作成、相続税、不動産の相続登記などがございます。",
+                "介護と健康": "介護や健康に関するご相談ですね。まずは何が気がかりなのか、一緒に整理していきましょう。",
             },
-            "coaching_question": {
+            "decision_support": {
                 "相続終活": "お話しいただきありがとうございます。その中で、何を一番大切にしたいとお考えですか？ご家族との関係、資産の保全、手続きの簡便さなど、優先順位をお聞かせください。",
-                "介護と健康": "介護負担を軽減するために使えそうな支援について、何かご存知のものはありますか？",
+                "介護と健康": "ありがとうございます。介護の中で、一番大切にしたいことは何でしょうか？ご自身の生活と介護のバランスについてお聞かせください。",
             },
-            "guide_generation": {
+            "action_bridging": {
                 "相続終活": "以下の公的機関情報が参考になります。詳しい手続きについては各機関にお問い合わせください。",
                 "介護と健康": "こちらの自治体支援ページをご覧ください。お住まいの地域の支援情報が掲載されています。",
             },
-            "follow_up": {
-                "default": "他にもお悩みのことはございますか？別のテーマについてもご相談いただけます。",
+            "life_stability": {
+                "相続終活": "今回の相続に関連して、今後のライフプランへの影響も考えておくと安心です。他にも気になる点はございますか？",
+                "介護と健康": "介護は長期的な視点も大切です。今後の変化に備えて、今のうちに確認しておくと良いことをお伝えします。",
+                "default": "今回のご相談に関連して、長期的な視点でも確認しておきましょう。他にも気になることはありますか？",
+            },
+            "resource_optimization": {
+                "default": "最後に、時間やお金の面で負担を減らせるポイントをまとめます。他にもご相談されたいテーマがあればお気軽にどうぞ。",
             },
         }
 
-        step_templates = templates.get(step, templates.get("follow_up", {}))
+        step_templates = templates.get(step, templates.get("resource_optimization", {}))
         return step_templates.get(topic, step_templates.get("default", "承知しました。もう少し詳しくお聞かせください。"))
 
     def _detect_emotion(self, text: str) -> tuple[Optional[str], Optional[float]]:
@@ -357,13 +394,14 @@ class CoachingService:
 
     def _get_next_question(self, topic: str, state: dict) -> Optional[str]:
         """Suggest the next question based on dialogue state."""
-        step = state.get("current_step", "identify_concern")
+        step = state.get("current_step", "information_organizing")
 
         hints = {
-            "identify_concern": "まず、お悩みの状況について教えてください。",
-            "coaching_question": "もう少し詳しくお聞かせください。",
-            "guide_generation": "関連する公的サイト情報をお探しします。",
-            "follow_up": "他にもご相談されたいことはありますか？",
+            "information_organizing": "まず、お悩みの状況について教えてください。",
+            "decision_support": "何を一番大切にしたいか、お聞かせください。",
+            "action_bridging": "具体的な行動ステップをご案内します。",
+            "life_stability": "長期的な視点で確認しておきましょう。",
+            "resource_optimization": "時間やコスト面での負担軽減を考えましょう。",
         }
 
         return hints.get(step)

@@ -2,18 +2,18 @@
   "topics": {
     "相続終活": {
       "display_name": "相続・終活",
-      "description": "遺言、相続税、不動産登記等に関するコーチング対話",
+      "description": "遺言、相続税、不動産登記等に関するLife Ability対話",
       "steps": {
-        "identify_concern": {
-          "system_instruction": "ユーザーの相続・終活に関する具体的な悩みを特定してください。",
+        "information_organizing": {
+          "system_instruction": "ユーザーの相続・終活に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
           "opening_messages": [
-            "相続や終活についてのご相談ですね。どのような場面で悩まれていますか？",
+            "相続や終活についてのご相談ですね。まずは状況を整理しましょう。どのような場面で悩まれていますか？",
             "例えば、遺言書の作成、相続税の心配、不動産の名義変更など、具体的に教えていただけますか？"
           ],
           "keywords": ["遺言", "相続税", "不動産", "登記", "遺産分割", "終活", "エンディングノート"]
         },
-        "coaching_question": {
-          "system_instruction": "ユーザーの本質的なニーズを引き出すコーチング質問をしてください。",
+        "decision_support": {
+          "system_instruction": "ユーザーの価値基準と優先順位を明確化し、納得のいく意思決定を支援してください。",
           "coaching_questions": [
             "その中で、何を一番大切にしたいとお考えですか？",
             "ご家族との関係で一番気になっていることは何ですか？",
@@ -21,9 +21,9 @@
             "今すぐ取りかかれることと、時間がかかりそうなことを分けるとすると？"
           ]
         },
-        "guide_generation": {
-          "system_instruction": "ユーザーの悩みに合った公的機関の情報を具体的に案内してください。",
-          "intro_message": "以下の公的機関情報が参考になります：",
+        "action_bridging": {
+          "system_instruction": "ユーザーの意思決定を具体的な行動ステップに変換し、公的機関情報を案内してください。",
+          "intro_message": "具体的な次の一歩をご案内します：",
           "default_sites": [
             {
               "title": "法務局 - 相続登記手続き",
@@ -46,33 +46,47 @@
               "description": "法的トラブルの総合案内所"
             }
           ]
+        },
+        "life_stability": {
+          "system_instruction": "今回の相続に関連して、長期的なライフイベントへの備えを一緒に確認してください。",
+          "coaching_questions": [
+            "相続以外に、今後のライフプランで気になることはありますか？",
+            "今後、似たような判断が必要になったとき、どう備えておきたいですか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "時間・費用・心理的負担を軽減するための実用情報を提供し、対話のまとめをしてください。",
+          "coaching_questions": [
+            "無料で使える相談窓口について、ご存知のものはありますか？",
+            "他にもご相談されたいテーマはありますか？"
+          ]
         }
       }
     },
     "介護と健康": {
       "display_name": "介護・健康",
-      "description": "介護保険、地域支援、健康管理に関するコーチング対話",
+      "description": "介護保険、地域支援、健康管理に関するLife Ability対話",
       "steps": {
-        "identify_concern": {
-          "system_instruction": "ユーザーの介護・健康に関する悩みを丁寧に聞き取ってください。",
+        "information_organizing": {
+          "system_instruction": "ユーザーの介護・健康に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
           "opening_messages": [
-            "介護や健康に関するご相談ですね。最近、介護に関してどんな不安がありますか？",
+            "介護や健康に関するご相談ですね。まずは状況を整理しましょう。最近、介護に関してどんな不安がありますか？",
             "ご自身の健康のこと、ご家族の介護のこと、どちらについてでしょうか？"
           ],
           "keywords": ["介護", "介護保険", "デイサービス", "訪問介護", "ケアマネ", "健康", "認知症"]
         },
-        "coaching_question": {
-          "system_instruction": "介護負担の軽減や健康改善に向けた深い質問をしてください。",
+        "decision_support": {
+          "system_instruction": "介護の中で何を優先したいか、価値基準を明確にし、納得のいく判断を支援してください。",
           "coaching_questions": [
-            "介護負担を軽減するために使えそうな支援は知っていますか？",
+            "介護の中で、一番大切にしたいことは何ですか？",
             "今、一番助けが必要だと感じていることは何ですか？",
             "ご家族や周りの方と、介護について話し合えていますか？",
             "ご自身の健康管理で気をつけていることはありますか？"
           ]
         },
-        "guide_generation": {
-          "system_instruction": "介護・健康に関する公的支援情報を案内してください。",
-          "intro_message": "こちらの公的支援ページをご覧ください：",
+        "action_bridging": {
+          "system_instruction": "具体的な支援先・制度への接続を案内してください。",
+          "intro_message": "具体的な支援情報をご案内します：",
           "default_sites": [
             {
               "title": "厚生労働省 - 介護保険制度",
@@ -90,29 +104,43 @@
               "description": "介護サービス事業所の検索"
             }
           ]
+        },
+        "life_stability": {
+          "system_instruction": "介護の長期的な視点と、関連するライフイベントへの備えを確認してください。",
+          "coaching_questions": [
+            "今後の介護状況の変化に、どのように備えておきたいですか？",
+            "介護以外に、生活面で心配なことはありますか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "介護に関する負担軽減制度や時間の確保について実用情報を提供してください。",
+          "coaching_questions": [
+            "介護休業制度やレスパイトケアについてご存知ですか？",
+            "他にもご相談されたいテーマはありますか？"
+          ]
         }
       }
     },
     "家庭問題": {
       "display_name": "家庭問題",
-      "description": "家族関係、DV相談、生活困窮等に関するコーチング対話",
+      "description": "家族関係、DV相談、生活困窮等に関するLife Ability対話",
       "steps": {
-        "identify_concern": {
-          "system_instruction": "ユーザーの家庭問題について安全な環境で聞き取ってください。緊急性の判断も行ってください。",
+        "information_organizing": {
+          "system_instruction": "ユーザーの家庭問題について安全な環境で聞き取り、事実・感情・制約条件を整理してください。緊急性の判断も行ってください。",
           "opening_messages": [
-            "家庭に関するご相談ですね。安心してお話しください。どのようなことでお悩みですか？"
+            "家庭に関するご相談ですね。安心してお話しください。まず、今の状況を整理するところから始めましょう。"
           ],
           "keywords": ["家族", "夫婦", "離婚", "DV", "虐待", "生活困窮", "引きこもり"]
         },
-        "coaching_question": {
-          "system_instruction": "安全と安心を最優先にしながら、解決の糸口を一緒に探してください。",
+        "decision_support": {
+          "system_instruction": "安全と安心を最優先にしながら、ユーザーの価値基準に基づいた判断を支援してください。",
           "coaching_questions": [
             "今、安全な環境にいらっしゃいますか？",
             "信頼できる方に相談されたことはありますか？",
             "どのような支援があれば、状況が改善しそうですか？"
           ]
         },
-        "guide_generation": {
+        "action_bridging": {
           "system_instruction": "緊急性に応じた相談窓口を優先的に案内してください。",
           "intro_message": "以下の相談窓口にご連絡いただけます：",
           "default_sites": [
@@ -127,27 +155,43 @@
               "description": "DV相談窓口一覧"
             }
           ]
+        },
+        "life_stability": {
+          "system_instruction": "長期的な安全と生活の安定に向けた備えを一緒に確認してください。",
+          "coaching_questions": [
+            "今後の生活の安定に向けて、どのようなサポートがあると安心ですか？",
+            "ご自身やお子さまの将来について、気になることはありますか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "利用可能な支援制度や相談窓口を案内し、負担軽減の情報を提供してください。",
+          "coaching_questions": [
+            "生活面で利用できる支援制度について確認しておきましょう。",
+            "他にもご相談されたいテーマはありますか？"
+          ]
         }
       }
     },
     "お金と資産": {
       "display_name": "お金・資産管理",
-      "description": "NISA、年金、家計管理に関するコーチング対話",
+      "description": "NISA、年金、家計管理に関するLife Ability対話",
       "steps": {
-        "identify_concern": {
-          "system_instruction": "ユーザーのお金・資産に関する悩みを聞き取ってください。",
+        "information_organizing": {
+          "system_instruction": "ユーザーのお金・資産に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
           "opening_messages": [
-            "お金や資産管理についてのご相談ですね。具体的にどのような点が気になっていますか？"
+            "お金や資産管理についてのご相談ですね。まずは状況を整理しましょう。具体的にどのような点が気になっていますか？"
           ],
           "keywords": ["NISA", "年金", "家計", "資産", "投資", "節約", "ローン"]
         },
-        "coaching_question": {
+        "decision_support": {
+          "system_instruction": "お金に関する価値基準と優先順位を明確化し、納得のいく判断を支援してください。",
           "coaching_questions": [
             "将来に向けて、お金に関して一番心配なことは何ですか？",
             "現在の収支バランスについて、改善したい点はありますか？"
           ]
         },
-        "guide_generation": {
+        "action_bridging": {
+          "system_instruction": "具体的な制度や公的情報への接続を案内してください。",
           "intro_message": "以下の公的情報が参考になります：",
           "default_sites": [
             {
@@ -156,26 +200,43 @@
               "description": "NISA制度の概要"
             }
           ]
+        },
+        "life_stability": {
+          "system_instruction": "長期的な資産管理やライフプランへの影響を確認してください。",
+          "coaching_questions": [
+            "将来のライフイベント（住宅、教育、老後など）に向けた備えは大丈夫ですか？",
+            "お金以外に、生活面で関連する心配事はありますか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "費用軽減や無料相談窓口の情報を提供してください。",
+          "coaching_questions": [
+            "ファイナンシャルプランナーへの無料相談をご存知ですか？",
+            "他にもご相談されたいテーマはありますか？"
+          ]
         }
       }
     },
     "健康管理": {
       "display_name": "健康管理",
-      "description": "健康管理全般に関するコーチング対話",
+      "description": "健康管理全般に関するLife Ability対話",
       "steps": {
-        "identify_concern": {
+        "information_organizing": {
+          "system_instruction": "ユーザーの健康に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
           "opening_messages": [
-            "健康管理についてのご相談ですね。最近、健康面で気になることはありますか？"
+            "健康管理についてのご相談ですね。まずは状況を整理しましょう。最近、健康面で気になることはありますか？"
           ],
           "keywords": ["健康診断", "運動", "食事", "睡眠", "メンタルヘルス"]
         },
-        "coaching_question": {
+        "decision_support": {
+          "system_instruction": "健康に関する優先事項を明確化し、納得のいく判断を支援してください。",
           "coaching_questions": [
             "健康面で特に改善したいと思っていることは何ですか？",
             "日常生活で健康のために心がけていることはありますか？"
           ]
         },
-        "guide_generation": {
+        "action_bridging": {
+          "system_instruction": "具体的な健康情報や支援先への接続を案内してください。",
           "intro_message": "以下の健康情報サイトが参考になります：",
           "default_sites": [
             {
@@ -183,6 +244,65 @@
               "url": "https://www.e-healthnet.mhlw.go.jp/",
               "description": "厚生労働省 健康情報サイト"
             }
+          ]
+        },
+        "life_stability": {
+          "system_instruction": "長期的な健康管理の視点と、他のライフイベントとの関連を確認してください。",
+          "coaching_questions": [
+            "健康面で、長期的に取り組みたいことはありますか？",
+            "健康以外に、生活面で関連する心配事はありますか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "健康管理に関する費用軽減や時間確保のヒントを提供してください。",
+          "coaching_questions": [
+            "自治体の健康診断や無料相談をご存知ですか？",
+            "他にもご相談されたいテーマはありますか？"
+          ]
+        }
+      }
+    },
+    "仕事と生活": {
+      "display_name": "仕事と生活",
+      "description": "ワークライフバランス、キャリアに関するLife Ability対話",
+      "steps": {
+        "information_organizing": {
+          "system_instruction": "ユーザーの仕事と生活に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
+          "opening_messages": [
+            "仕事と生活に関するご相談ですね。まずはお悩みの全体像を一緒に整理していきましょう。"
+          ],
+          "keywords": ["仕事", "転職", "休職", "ストレス", "バランス", "キャリア"]
+        },
+        "decision_support": {
+          "system_instruction": "仕事と生活のバランスについて、ユーザーの価値基準を明確にし、納得のいく判断を支援してください。",
+          "coaching_questions": [
+            "仕事と生活の中で、一番大切にしたいことは何ですか？",
+            "理想的なワークライフバランスとはどのような状態ですか？"
+          ]
+        },
+        "action_bridging": {
+          "system_instruction": "具体的な行動ステップと支援制度を案内してください。",
+          "intro_message": "以下の情報が参考になります：",
+          "default_sites": [
+            {
+              "title": "厚生労働省 - 働き方改革",
+              "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000148322.html",
+              "description": "働き方改革関連情報"
+            }
+          ]
+        },
+        "life_stability": {
+          "system_instruction": "長期的なキャリアと生活設計の視点を提供してください。",
+          "coaching_questions": [
+            "今後のキャリアプランで、気になっていることはありますか？",
+            "仕事以外のライフイベントとの両立について心配はありますか？"
+          ]
+        },
+        "resource_optimization": {
+          "system_instruction": "時間の確保や負担軽減のための実用情報を提供してください。",
+          "coaching_questions": [
+            "会社の福利厚生や支援制度で、まだ活用していないものはありますか？",
+            "他にもご相談されたいテーマはありますか？"
           ]
         }
       }

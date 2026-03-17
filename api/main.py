@@ -64,10 +64,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="未来アシストAI API",
     description=(
-        "コンシェルジュ・コーチングAI - 対話を通じて公的情報へ案内するシステム\n\n"
+        "Life Ability実践AI - 意思決定の質を高め、対話を通じて公的情報へ案内するシステム\n\n"
         "柴田研究室 Service Informatics Lab | 玉川大学"
     ),
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
@@ -105,7 +105,7 @@ app.include_router(ws.router)
 async def health_check():
     return {
         "service": "未来アシストAI",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "status": "operational",
         "lab": "柴田研究室 Service Informatics",
     }

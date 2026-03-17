@@ -47,7 +47,7 @@ export default function TopicSelector({ onSelect }) {
           何についてご相談されますか？
         </h2>
         <p className="mt-2 text-gray-500">
-          お悩みのテーマをお選びください。対話を通じて適切な情報へご案内します。
+          お悩みのテーマをお選びください。Life Abilityの5つの要素に沿って、情報整理から行動まで一緒にサポートします。
         </p>
       </div>
 

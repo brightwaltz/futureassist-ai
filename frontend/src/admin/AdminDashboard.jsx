@@ -19,7 +19,7 @@ const kpiConfig = [
   { key: "conversation_count", label: "相談件数", color: "bg-blue-100 text-blue-600" },
   { key: "survey_count", label: "アンケート回答数", color: "bg-green-100 text-green-600" },
   { key: "active_users", label: "アクティブユーザー", color: "bg-purple-100 text-purple-600" },
-  { key: "avg_life_ability_score", label: "平均LAスコア", color: "bg-amber-100 text-amber-600" },
+  { key: "avg_life_ability_score", label: "平均Life Ability", color: "bg-amber-100 text-amber-600" },
 ];
 
 const kpiIcons = [

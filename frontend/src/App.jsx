@@ -27,7 +27,7 @@ function MainLayout() {
                 未来アシストAI
               </h1>
               <span className="text-xs text-gray-400 hidden sm:inline">
-                コンシェルジュ・コーチング
+                Life Ability 実践プラットフォーム
               </span>
             </div>
             <nav className="flex gap-4">

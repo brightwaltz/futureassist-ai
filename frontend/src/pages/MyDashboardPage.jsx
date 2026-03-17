@@ -132,13 +132,29 @@ export default function MyDashboardPage() {
         </div>
       )}
 
-      {/* Score Level */}
+      {/* Life Ability 5 Elements */}
       {wellbeing?.components?.life_ability_score != null && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-3">スコアレベル</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Life Ability 5要素</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+            {[
+              { key: "information_organizing", label: "情報整理力" },
+              { key: "decision_satisfaction", label: "意思決定納得度" },
+              { key: "action_bridging", label: "行動移行力" },
+              { key: "life_stability", label: "生活運用安定性" },
+              { key: "resource_optimization", label: "リソース創出力" },
+            ].map((el) => (
+              <div key={el.key} className="text-center">
+                <p className="text-xs text-gray-500">{el.label}</p>
+                <p className="text-lg font-bold text-primary-600">
+                  {wellbeing?.components?.life_ability_elements?.[el.key]?.toFixed(1) ?? "---"}
+                </p>
+              </div>
+            ))}
+          </div>
           <div className="flex items-center gap-6">
             <div>
-              <span className="text-sm text-gray-500">ライフアビリティ: </span>
+              <span className="text-sm text-gray-500">ライフアビリティ総合: </span>
               <ScoreLevel score={wellbeing.components.life_ability_score} />
             </div>
             <div>

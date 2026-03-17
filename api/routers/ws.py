@@ -50,14 +50,14 @@ async def _generate_ai_response(
     ai_client = _get_ai_client()
 
     topic = state.get("topic", "その他")
-    current_step = state.get("current_step", "identify_concern")
+    current_step = state.get("current_step", "information_organizing")
 
     # Build system prompt
     system_prompt = service.build_system_prompt(topic, state)
 
-    # Add public site info during guide_generation
+    # Add public site info during action_bridging
     suggested_links = []
-    if current_step == "guide_generation":
+    if current_step == "action_bridging":
         sites = await service.find_relevant_sites(topic)
         suggested_links = sites
         if sites:
@@ -86,74 +86,84 @@ async def _generate_ai_response(
 def _enhanced_template_response(topic: str, state: dict, user_input: str) -> str:
     """
     Improved template responses that incorporate user input.
-    Each step returns a contextually different response.
+    Each step returns a contextually different response based on Life Ability 5 elements.
     """
-    step = state.get("current_step", "identify_concern")
+    step = state.get("current_step", "information_organizing")
     turn = state.get("turn", 0)
 
     # Topic-specific responses
     topic_map = {
         "相続終活": {
-            "identify_concern": [
-                f"「{user_input}」についてのご相談ですね。もう少し詳しく状況をお聞かせいただけますか？例えば、ご家族の構成や、特に気になっている点などがあれば教えてください。",
-                f"承知しました。{user_input}に関して、現在どのような状況でしょうか？すでに何か手続きを始められていますか？",
+            "information_organizing": [
+                f"「{user_input}」についてのご相談ですね。まずは状況を整理しましょう。ご家族の構成や、特に気になっている点など、事実と気持ちを分けてお聞かせください。",
+                f"承知しました。{user_input}に関して、現在の状況を整理させてください。客観的な事実（手続きの状況など）と、気持ちの面（不安・焦りなど）を分けてお話しいただけますか？",
             ],
-            "coaching_question": [
+            "decision_support": [
                 f"ありがとうございます。{user_input}とのことですね。その中で、一番大切にしたいことは何でしょうか？例えば、ご家族との関係、資産の保全、手続きの簡便さなど、優先順位をお聞かせください。",
-                f"なるほど、{user_input}ということですね。理想的にはどのような形で解決できると安心されますか？",
+                f"なるほど、{user_input}ということですね。理想的にはどのような形で解決できると「自分で決めた」と納得できますか？",
             ],
-            "guide_generation": [
-                f"お話を伺った内容をもとに、参考になりそうな公的機関の情報をご案内します。\n\n"
+            "action_bridging": [
+                f"お話を伺った内容をもとに、具体的な次の一歩をご案内します。\n\n"
                 "■ 法務局「相続登記の申請義務化」\n  https://houmukyoku.moj.go.jp/homu/souzokutouki\n\n"
                 "■ 国税庁「相続税の申告のしかた」\n  https://www.nta.go.jp/taxes/shiraberu/sozoku-tokushu/\n\n"
                 "■ 法テラス（無料法律相談）\n  https://www.houterasu.or.jp/\n\n"
-                "これらの情報は参考としてご覧ください。具体的な手続きについてご不明な点はありますか？",
+                "まず最初にできることとして、お住まいの地域の無料法律相談の予約をおすすめします。",
                 f"ご相談内容に基づいて、以下の公的情報が参考になると思います。\n\n"
                 "■ 日本公証人連合会（遺言公正証書）\n  https://www.koshonin.gr.jp/\n\n"
                 "■ 法務省「遺言書保管制度」\n  https://www.moj.go.jp/MINJI/minji03_00051.html\n\n"
                 "■ 各自治体の無料相談窓口\n  お住まいの市区町村の「法律相談」を検索してみてください。\n\n"
-                "他にお調べしたいことはありますか？",
+                "まずは一つ、取りかかりやすいものから始めてみましょう。",
             ],
-            "follow_up": [
-                "案内した情報はお役に立ちそうですか？他にも気になる点や、別のテーマについてもご相談いただけます。",
-                "他にもご心配なことはございますか？相続以外のテーマ（介護、お金の管理など）についてもお気軽にご相談ください。",
+            "life_stability": [
+                "今回の相続に関連して、長期的な視点でも確認しておきましょう。例えば、今後の介護や資産管理の備えなど、関連するライフイベントへの準備は大丈夫ですか？",
+                "相続の手続き以外にも、今後のライフプランへの影響を考えておくと安心です。心の余裕を保つためにも、一度に全部ではなく段階的に進めていきましょう。",
+            ],
+            "resource_optimization": [
+                "最後に、時間と費用の面で負担を軽減するポイントをまとめます。法テラスの無料相談や、自治体の相談窓口を活用すると、専門家費用を抑えられます。他にもご相談されたいテーマはありますか？",
+                "今日の対話で整理できたことを振り返ると、状況の把握と次のステップが明確になりましたね。時間的な余裕を作るためにも、期限のあるものから優先して取り組みましょう。他にもお悩みはありますか？",
             ],
         },
         "介護と健康": {
-            "identify_concern": [
-                f"「{user_input}」についてのご相談ですね。介護に関して、具体的にどのような場面でお困りですか？ご自身の介護、ご家族の介護など、状況をお聞かせください。",
-                f"承知しました。{user_input}に関して、現在どのような支援を受けていらっしゃいますか？",
+            "information_organizing": [
+                f"「{user_input}」についてのご相談ですね。まずは状況を整理しましょう。介護に関して、事実（現在の介護状況）と気持ち（不安やストレス）を分けてお聞かせください。",
+                f"承知しました。{user_input}に関して、現在どのような支援を受けていて、何が一番負担になっていますか？",
             ],
-            "coaching_question": [
-                f"ありがとうございます。{user_input}とのことですね。介護の中で、一番負担に感じていることは何でしょうか？",
-                f"なるほど、{user_input}ということですね。理想的にはどのようなサポートがあると助かりますか？",
+            "decision_support": [
+                f"ありがとうございます。{user_input}とのことですね。介護の中で、一番大切にしたいことは何でしょうか？ご自身の生活との両立、ご家族の安心、費用面など、優先順位を一緒に考えましょう。",
+                f"なるほど、{user_input}ということですね。理想的にはどのようなサポートがあると、納得のいく介護ができると思いますか？",
             ],
-            "guide_generation": [
-                "お話を伺った内容をもとに、参考になりそうな公的機関の情報をご案内します。\n\n"
+            "action_bridging": [
+                "お話を伺った内容をもとに、具体的な支援情報をご案内します。\n\n"
                 "■ 厚生労働省「介護保険制度の概要」\n  https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/\n\n"
                 "■ 地域包括支援センター\n  お住まいの地域の包括支援センターにご相談ください。\n\n"
                 "■ 介護サービス情報公表システム\n  https://www.kaigokensaku.mhlw.go.jp/\n\n"
-                "これらの情報は参考としてご覧ください。",
+                "まず最初に、お近くの地域包括支援センターに相談してみることをおすすめします。",
             ],
-            "follow_up": [
-                "案内した情報はお役に立ちそうですか？他にも気になる点がございましたらお気軽にどうぞ。",
+            "life_stability": [
+                "介護は長期的な視点も大切です。今後の変化に備えて、ケアマネジャーとの定期的な相談や、家族間での役割分担の見直しを検討してみてください。心の余裕を保つことも重要です。",
+            ],
+            "resource_optimization": [
+                "介護保険の自己負担軽減制度や、自治体独自の助成制度も確認してみてください。時間面では、レスパイトケア（介護者の休息支援）の利用もおすすめです。他にもご相談されたいことはありますか？",
             ],
         },
     }
 
     # Default fallback for unlisted topics
     default_responses = {
-        "identify_concern": [
-            f"「{user_input}」についてのご相談ですね。もう少し具体的に、どのような点でお悩みか教えていただけますか？",
+        "information_organizing": [
+            f"「{user_input}」についてのご相談ですね。まずは状況を整理しましょう。具体的に、どのような点でお悩みか教えていただけますか？",
         ],
-        "coaching_question": [
+        "decision_support": [
             f"ありがとうございます。{user_input}とのことですね。その中で、一番大切にしたいことや優先したいことは何でしょうか？",
         ],
-        "guide_generation": [
-            "お話を伺った内容をもとに、関連する公的機関の情報をお調べしました。お住まいの自治体の相談窓口もご活用ください。",
+        "action_bridging": [
+            "お話を伺った内容をもとに、関連する公的機関の情報をご案内します。お住まいの自治体の相談窓口もご活用ください。",
         ],
-        "follow_up": [
-            "他にもご相談されたいことはございますか？別のテーマについてもお気軽にどうぞ。",
+        "life_stability": [
+            "今回のご相談に関連して、長期的な視点でも確認しておきましょう。今後の備えについて一緒に考えてみませんか？",
+        ],
+        "resource_optimization": [
+            "最後に、時間やコスト面で負担を軽減できるポイントをまとめます。無料で利用できる制度もありますので、ぜひご活用ください。他にもご相談されたいことはありますか？",
         ],
     }
 
@@ -197,22 +207,22 @@ async def coaching_websocket(ws: WebSocket):
                     "session_id": session_id,
                     "user_id": user_id,
                     "topic": topic,
-                    "current_step": "identify_concern",
+                    "current_step": "information_organizing",
                     "turn": 0,
                 }
                 session_states[session_id] = state
                 conversation_history = []
 
-                # Generate greeting
+                # Generate greeting (Life Ability framing)
                 greetings = {
-                    "相続終活": "相続や終活についてのご相談ですね。具体的にどのような点でお悩みですか？例えば、遺言の作成、相続税、不動産の相続登記などがございます。お気軽にお話しください。",
-                    "介護と健康": "介護や健康に関するご相談ですね。最近、介護や健康についてどんなことが気になっていますか？",
-                    "家庭問題": "家庭に関するご相談ですね。どのようなことでお悩みですか？",
-                    "仕事と生活": "仕事と生活に関するご相談ですね。具体的にどのようなことでお困りですか？",
-                    "お金と資産": "お金や資産管理に関するご相談ですね。どのような点が気になっていますか？",
-                    "健康管理": "健康管理についてのご相談ですね。具体的にどのようなことでお悩みですか？",
+                    "相続終活": "相続や終活についてのご相談ですね。まずは状況を一緒に整理しましょう。今、一番気になっていることは何ですか？",
+                    "介護と健康": "介護や健康に関するご相談ですね。まずは何が気がかりなのか、一緒に整理していきましょう。",
+                    "家庭問題": "家庭に関するご相談ですね。安心してお話しください。まず、今の状況を整理するところから始めましょう。",
+                    "仕事と生活": "仕事と生活に関するご相談ですね。まずはお悩みの全体像を一緒に整理していきましょう。",
+                    "お金と資産": "お金や資産管理についてのご相談ですね。まずは今の状況と気になっていることを整理しましょう。",
+                    "健康管理": "健康管理についてのご相談ですね。まずはどのようなことが気になっているか、整理していきましょう。",
                 }
-                greeting = greetings.get(topic, "ご相談承ります。どのようなことでお悩みですか？お気軽にお話しください。")
+                greeting = greetings.get(topic, "ご相談承ります。まずは状況を一緒に整理しましょう。どのようなことでお悩みですか？")
 
                 conversation_history.append({"role": "assistant", "content": greeting})
 
@@ -245,7 +255,7 @@ async def coaching_websocket(ws: WebSocket):
                         "session_id": session_id,
                         "topic": topic,
                         "greeting": greeting,
-                        "current_step": "identify_concern",
+                        "current_step": "information_organizing",
                     },
                 })
 
@@ -279,7 +289,7 @@ async def coaching_websocket(ws: WebSocket):
                 conversation_history.append({"role": "assistant", "content": response_text})
 
                 # Advance state: move to next step after each message
-                steps = ["identify_concern", "coaching_question", "guide_generation", "follow_up"]
+                steps = ["information_organizing", "decision_support", "action_bridging", "life_stability", "resource_optimization"]
                 current_idx = steps.index(state["current_step"]) if state["current_step"] in steps else 0
                 state["turn"] += 1
                 # Advance step every message (not every 2 turns)
