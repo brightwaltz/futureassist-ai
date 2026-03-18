@@ -6,6 +6,7 @@ import SurveyPage from "./pages/SurveyPage";
 import MyDashboardPage from "./pages/MyDashboardPage";
 import ConversationHistoryPage from "./pages/ConversationHistoryPage";
 import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
 import AdminLogin from "./admin/AdminLogin";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -67,7 +68,13 @@ function MainLayout() {
                 </Link>
               </nav>
               <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                <span className="text-sm text-gray-700">{user.name}</span>
+                <Link
+                  to="/profile"
+                  className="text-sm text-gray-700 hover:text-primary-600 transition"
+                  title="プロフィール編集"
+                >
+                  {user.name}
+                </Link>
                 <button
                   onClick={logout}
                   className="text-xs text-gray-400 hover:text-red-500 transition"
@@ -87,6 +94,7 @@ function MainLayout() {
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/dashboard" element={<MyDashboardPage />} />
           <Route path="/history" element={<ConversationHistoryPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
     </div>

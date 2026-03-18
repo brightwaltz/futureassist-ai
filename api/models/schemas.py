@@ -18,6 +18,21 @@ class UserCreate(BaseModel):
         None,
         pattern=r"^(10代|20代|30代|40代|50代|60代|70代以上)$"
     )
+    company: str = Field(..., min_length=1, max_length=200)
+    department: Optional[str] = Field(None, max_length=200)
+    position: Optional[str] = Field(None, max_length=200)
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    email: Optional[str] = None
+    age_group: Optional[str] = Field(
+        None,
+        pattern=r"^(10代|20代|30代|40代|50代|60代|70代以上)$"
+    )
+    company: Optional[str] = Field(None, min_length=1, max_length=200)
+    department: Optional[str] = Field(None, max_length=200)
+    position: Optional[str] = Field(None, max_length=200)
 
 
 class UserLogin(BaseModel):
@@ -29,6 +44,9 @@ class UserResponse(BaseModel):
     external_id: UUID
     name: str
     age_group: Optional[str]
+    company: Optional[str] = None
+    department: Optional[str] = None
+    position: Optional[str] = None
     consent_status: bool
     created_at: datetime
 

@@ -266,12 +266,14 @@ async def coaching_websocket(ws: WebSocket):
                 conversation_history.append({"role": "assistant", "content": greeting})
 
                 # v2 logging: create conversation record
+                # NOTE: session_id is a random UUID with no matching row in sessions table,
+                # so we must pass None to avoid FK constraint violation.
                 try:
                     async with async_session() as db:
                         conv = await log_conversation_start(
                             db,
                             tenant_id=tenant_id,
-                            session_id=UUID(session_id) if session_id else None,
+                            session_id=None,
                             user_id=validated_user_id,
                             channel="chat",
                             topic=topic,

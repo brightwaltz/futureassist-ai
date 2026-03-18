@@ -7,6 +7,9 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
+  const [company, setCompany] = useState("");
+  const [department, setDepartment] = useState("");
+  const [position, setPosition] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +36,14 @@ export default function AuthPage() {
     setError("");
     setLoading(true);
     try {
-      await register({ name, email, age_group: ageGroup || null });
+      await register({
+        name,
+        email,
+        age_group: ageGroup || null,
+        company,
+        department: department || null,
+        position: position || null,
+      });
     } catch (err) {
       setError(err.message || "登録に失敗しました");
     } finally {
@@ -125,7 +135,7 @@ export default function AuthPage() {
                   placeholder="your@email.com"
                 />
               </div>
-              <div className="mb-4">
+              <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   年齢層
                 </label>
@@ -143,6 +153,43 @@ export default function AuthPage() {
                   <option value="60代">60代</option>
                   <option value="70代以上">70代以上</option>
                 </select>
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  会社名 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="株式会社○○"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  部署名
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="人事部（任意）"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  役職
+                </label>
+                <input
+                  type="text"
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="マネージャー（任意）"
+                />
               </div>
               {error && (
                 <p className="text-sm text-red-500 mb-3">{error}</p>

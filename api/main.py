@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from api.config import get_settings
 from api.database import engine, Base, async_session
@@ -39,6 +39,21 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables verified")
+
+    # Add new columns to users table if they don't exist (migration for existing DBs)
+    async with engine.begin() as conn:
+        for col_name, col_def in [
+            ("company", "TEXT NOT NULL DEFAULT ''"),
+            ("department", "TEXT"),
+            ("position", "TEXT"),
+        ]:
+            try:
+                await conn.execute(
+                    text(f"ALTER TABLE users ADD COLUMN {col_name} {col_def}")
+                )
+                logger.info(f"Added column users.{col_name}")
+            except Exception:
+                pass  # Column already exists
 
     # Ensure default tenant exists
     async with async_session() as db:

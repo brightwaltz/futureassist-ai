@@ -36,6 +36,7 @@ export const api = {
   createUser: (data) => request("/users/", { method: "POST", body: JSON.stringify(data) }),
   getUser: (id) => request(`/users/${id}`),
   loginUser: (data) => request("/users/login", { method: "POST", body: JSON.stringify(data) }),
+  updateUser: (id, data) => request(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
 
   // User conversations
   getUserConversations: (userId, page = 1) => request(`/users/${userId}/conversations?page=${page}`),

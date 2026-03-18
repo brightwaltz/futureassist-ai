@@ -27,13 +27,20 @@ export function UserProvider({ children }) {
     return u;
   };
 
+  const updateProfile = async (data) => {
+    const u = await api.updateUser(user.id, data);
+    setUser(u);
+    localStorage.setItem("futureassist_user", JSON.stringify(u));
+    return u;
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("futureassist_user");
   };
 
   return (
-    <UserContext.Provider value={{ user, login, register, logout }}>
+    <UserContext.Provider value={{ user, login, register, updateProfile, logout }}>
       {children}
     </UserContext.Provider>
   );

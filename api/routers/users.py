@@ -11,7 +11,7 @@ from uuid import UUID
 
 from api.database import get_db
 from api.models.orm import User, Conversation
-from api.models.schemas import UserCreate, UserLogin, UserResponse
+from api.models.schemas import UserCreate, UserLogin, UserUpdate, UserResponse
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -31,6 +31,9 @@ async def create_user(data: UserCreate, db: AsyncSession = Depends(get_db)):
         name=data.name,
         email=data.email,
         age_group=data.age_group,
+        company=data.company,
+        department=data.department,
+        position=data.position,
     )
     db.add(user)
     await db.flush()
@@ -57,6 +60,31 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(user_id: int, data: UserUpdate, db: AsyncSession = Depends(get_db)):
+    """Update user profile."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check email uniqueness if changing email
+    if data.email is not None and data.email != user.email:
+        existing = await db.execute(
+            select(User).where(User.email == data.email, User.id != user_id)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="Email already registered")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(user, field, value)
+
+    await db.flush()
+    await db.refresh(user)
     return user
 
 
