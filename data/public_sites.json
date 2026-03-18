@@ -2,107 +2,234 @@
   "sites": [
     {
       "topic": "相続終活",
-      "title": "法務局 - 相続登記手続き",
-      "url": "https://houmukyoku.moj.go.jp/homu/page7_000001_00014.html",
-      "description": "不動産の相続登記に関する手続き案内",
+      "worry_target": "相続登記",
+      "title": "法務局 - 不動産登記の申請書様式について（相続登記）",
+      "url": "https://houmukyoku.moj.go.jp/homu/minji79.html",
+      "description": "相続登記の申請書様式と手続き概要",
+      "guidance_reason": "自分で申請できるかどうかを判断するために、申請書の構成・提出先・必要書類の種類を確認するページです",
+      "skip_info": "相続税・預貯金解約・戸籍収集の手順は今回は不要です",
       "category": "法務",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "相続終活",
-      "title": "国税庁 - 相続税の申告",
+      "worry_target": "相続税",
+      "title": "国税庁 - 相続税の申告要否判断",
       "url": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/sozoku/souzokunavi.htm",
-      "description": "相続税に関する情報",
+      "description": "相続税がかかるかどうかを確認するナビゲーター",
+      "guidance_reason": "そもそも相続税が関係するケースかどうかを判断するためだけに使います",
+      "skip_info": "税額計算・申告書の書き方は今は不要です",
       "category": "税務",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "相続終活",
-      "title": "日本公証人連合会 - 遺言",
-      "url": "https://www.koshonin.gr.jp/notary/ow01",
-      "description": "公正証書遺言の作成について",
+      "worry_target": "遺言・家族トラブル予防",
+      "title": "法務省 - 遺言の基本",
+      "url": "https://www.moj.go.jp/MINJI/minji95.html",
+      "description": "遺言がある場合・ない場合の法的な扱いの違い",
+      "guidance_reason": "家族が揉めないために、遺言の法的効力と種類を知るために使います",
+      "skip_info": "相続税・手続きの細かい流れ・書類の書き方は今は不要です",
       "category": "法務",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "相続終活",
-      "title": "法テラス - 無料法律相談",
-      "url": "https://www.houterasu.or.jp/",
-      "description": "法的トラブルの総合案内所",
-      "category": "相談",
-      "prefecture": null
+      "worry_target": "手続き全体像",
+      "title": "マイナポータル - 相続に関する手続き一覧",
+      "url": "https://myna.go.jp/",
+      "description": "相続発生後に必要な各種手続きの全体像",
+      "guidance_reason": "何がどれだけ大変かを事前に把握するために使います",
+      "skip_info": "個別の手続き詳細は今は確認不要です",
+      "category": "行政",
+      "is_active": true
     },
     {
       "topic": "介護と健康",
+      "worry_target": "介護保険の申請・利用",
       "title": "厚生労働省 - 介護保険制度",
       "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/index.html",
       "description": "介護保険制度の概要",
+      "guidance_reason": "介護保険の対象者・申請方法・利用できるサービスの全体像を確認するために使います",
+      "skip_info": "施設選び・費用計算・認知症ケアの詳細は今は不要です",
       "category": "制度",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "介護と健康",
+      "worry_target": "相談窓口・地域支援",
       "title": "地域包括支援センター",
       "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/chiiki-houkatsu/",
       "description": "高齢者の総合相談窓口",
+      "guidance_reason": "まず誰に相談すればいいか分からないときに、最寄りの窓口を見つけるために使います",
+      "skip_info": "具体的なサービス内容・費用比較は今は不要です",
       "category": "相談",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "介護と健康",
+      "worry_target": "介護サービスの選び方",
       "title": "WAM NET - 介護サービス情報",
       "url": "https://www.wam.go.jp/content/wamnet/pcpub/kaigo/",
       "description": "介護サービス事業所の検索",
+      "guidance_reason": "自宅近くのデイサービスや訪問介護を比較検討するために使います",
+      "skip_info": "介護保険の申請手続き・認定調査の詳細は今は不要です",
       "category": "サービス",
-      "prefecture": null
+      "is_active": true
     },
     {
-      "topic": "家庭問題",
-      "title": "よりそいホットライン",
-      "url": "https://www.since2011.net/yorisoi/",
-      "description": "24時間無料相談電話 0120-279-338",
-      "category": "相談",
-      "prefecture": null
-    },
-    {
-      "topic": "家庭問題",
-      "title": "配偶者暴力相談支援センター",
-      "url": "https://www.gender.go.jp/policy/no_violence/e-vaw/soudankikan/01.html",
-      "description": "DV相談窓口一覧",
-      "category": "相談",
-      "prefecture": null
+      "topic": "介護と健康",
+      "worry_target": "介護と仕事の両立",
+      "title": "厚生労働省 - 介護休業制度",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000158665.html",
+      "description": "介護休業・介護休暇の制度案内",
+      "guidance_reason": "仕事を続けながら介護をするために使える制度を確認するために使います",
+      "skip_info": "介護サービスの選び方・費用の詳細は今は不要です",
+      "category": "制度",
+      "is_active": true
     },
     {
       "topic": "お金と資産",
+      "worry_target": "資産形成・NISA",
       "title": "金融庁 - NISA制度",
       "url": "https://www.fsa.go.jp/policy/nisa2/",
       "description": "NISA制度の概要",
+      "guidance_reason": "NISAの仕組みと始め方を確認するために使います",
+      "skip_info": "個別銘柄の選び方・投資戦略は今は不要です",
       "category": "資産形成",
-      "prefecture": null
+      "is_active": true
     },
     {
-      "topic": "健康管理",
-      "title": "e-ヘルスネット",
-      "url": "https://www.e-healthnet.mhlw.go.jp/",
-      "description": "厚生労働省 健康情報サイト",
-      "category": "健康",
-      "prefecture": null
+      "topic": "お金と資産",
+      "worry_target": "年金・老後資金",
+      "title": "日本年金機構 - 年金の制度",
+      "url": "https://www.nenkin.go.jp/service/jukyu/index.html",
+      "description": "年金受給に関する情報",
+      "guidance_reason": "自分がいくら年金をもらえるか、受給開始時期を確認するために使います",
+      "skip_info": "NISA・資産運用・保険の詳細は今は不要です",
+      "category": "年金",
+      "is_active": true
+    },
+    {
+      "topic": "お金と資産",
+      "worry_target": "家計の見直し",
+      "title": "金融広報中央委員会 - 知るぽると",
+      "url": "https://www.shiruporuto.jp/",
+      "description": "暮らしのお金に関する情報",
+      "guidance_reason": "家計管理・節約・ライフプランの基礎知識を確認するために使います",
+      "skip_info": "投資・年金・税金の詳細は今は不要です",
+      "category": "家計",
+      "is_active": true
+    },
+    {
+      "topic": "お金と資産",
+      "worry_target": "借金・債務整理",
+      "title": "法テラス - 借金問題",
+      "url": "https://www.houterasu.or.jp/",
+      "description": "法的トラブルの総合案内所",
+      "guidance_reason": "借金の相談先と法的手続きの選択肢を確認するために使います",
+      "skip_info": "資産形成・投資・年金の情報は今は不要です",
+      "category": "相談",
+      "is_active": true
+    },
+    {
+      "topic": "家庭問題",
+      "worry_target": "DV・暴力問題",
+      "title": "配偶者暴力相談支援センター",
+      "url": "https://www.gender.go.jp/policy/no_violence/e-vaw/soudankikan/01.html",
+      "description": "DV相談窓口一覧",
+      "guidance_reason": "安全確保と相談先を確認するために使います。緊急時の対応も掲載されています",
+      "skip_info": "離婚手続き・子どもの親権・生活保護の詳細は今は不要です",
+      "category": "相談",
+      "is_active": true
+    },
+    {
+      "topic": "家庭問題",
+      "worry_target": "家族関係の悩み",
+      "title": "よりそいホットライン",
+      "url": "https://www.since2011.net/yorisoi/",
+      "description": "24時間無料相談電話 0120-279-338",
+      "guidance_reason": "誰かに話を聞いてほしいとき、24時間対応の無料相談窓口です",
+      "skip_info": "法的手続き・制度の詳細は今は不要です",
+      "category": "相談",
+      "is_active": true
+    },
+    {
+      "topic": "家庭問題",
+      "worry_target": "離婚・親権問題",
+      "title": "法テラス - 離婚・親権",
+      "url": "https://www.houterasu.or.jp/",
+      "description": "離婚・親権に関する法律相談",
+      "guidance_reason": "離婚手続きや親権について法的な選択肢を確認するために使います",
+      "skip_info": "DV対応・生活保護・住居支援の詳細は今は不要です",
+      "category": "法務",
+      "is_active": true
+    },
+    {
+      "topic": "家庭問題",
+      "worry_target": "生活困窮・経済的不安",
+      "title": "厚生労働省 - 生活困窮者自立支援制度",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000059425.html",
+      "description": "生活困窮者への支援制度",
+      "guidance_reason": "経済的に困っているときに利用できる公的支援を確認するために使います",
+      "skip_info": "家族関係・離婚・DVの詳細は今は不要です",
+      "category": "制度",
+      "is_active": true
     },
     {
       "topic": "仕事と生活",
+      "worry_target": "働き方・労働条件",
       "title": "厚生労働省 - 働き方改革",
       "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000148322.html",
       "description": "働き方改革に関する情報",
+      "guidance_reason": "労働時間・休暇制度・テレワークなど働き方の選択肢を確認するために使います",
+      "skip_info": "転職・キャリア相談・失業給付の詳細は今は不要です",
       "category": "制度",
-      "prefecture": null
+      "is_active": true
     },
     {
       "topic": "仕事と生活",
+      "worry_target": "転職・キャリア相談",
       "title": "ハローワーク",
       "url": "https://www.hellowork.mhlw.go.jp/",
       "description": "職業相談・紹介",
+      "guidance_reason": "転職先の探し方や職業相談を受けるために使います",
+      "skip_info": "現職の労働条件・休業制度の詳細は今は不要です",
       "category": "雇用",
-      "prefecture": null
+      "is_active": true
+    },
+    {
+      "topic": "仕事と生活",
+      "worry_target": "メンタルヘルス・ストレス",
+      "title": "こころの耳 - 働く人のメンタルヘルスポータル",
+      "url": "https://kokoro.mhlw.go.jp/",
+      "description": "働く人のメンタルヘルス情報",
+      "guidance_reason": "職場のストレスやメンタルヘルスの相談先を確認するために使います",
+      "skip_info": "転職・労働条件・キャリア設計の詳細は今は不要です",
+      "category": "健康",
+      "is_active": true
+    },
+    {
+      "topic": "仕事と生活",
+      "worry_target": "育児・介護との両立",
+      "title": "厚生労働省 - 育児・介護休業法",
+      "url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000130583.html",
+      "description": "育児・介護休業制度の案内",
+      "guidance_reason": "育児や介護と仕事を両立するための制度を確認するために使います",
+      "skip_info": "転職・メンタルヘルス・労働条件の詳細は今は不要です",
+      "category": "制度",
+      "is_active": true
+    },
+    {
+      "topic": "健康管理",
+      "worry_target": "健康全般",
+      "title": "e-ヘルスネット",
+      "url": "https://www.e-healthnet.mhlw.go.jp/",
+      "description": "厚生労働省 健康情報サイト",
+      "guidance_reason": "健康管理全般の基礎知識を確認するために使います",
+      "skip_info": "個別の病気・治療法の詳細は今は不要です",
+      "category": "健康",
+      "is_active": true
     }
   ]
 }

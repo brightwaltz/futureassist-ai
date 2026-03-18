@@ -205,3 +205,13 @@ CREATE TRIGGER trigger_users_updated_at
 CREATE TRIGGER trigger_metrics_updated_at
     BEFORE UPDATE ON metrics_log
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ─── Migration: Add worry_target and guidance fields to public_sites ───
+ALTER TABLE public_sites ADD COLUMN IF NOT EXISTS worry_target VARCHAR(100);
+ALTER TABLE public_sites ADD COLUMN IF NOT EXISTS guidance_reason TEXT;
+ALTER TABLE public_sites ADD COLUMN IF NOT EXISTS skip_info TEXT;
+
+-- Index for worry_target lookup
+CREATE INDEX IF NOT EXISTS idx_public_sites_worry_target
+  ON public_sites(topic, worry_target)
+  WHERE is_active = TRUE;

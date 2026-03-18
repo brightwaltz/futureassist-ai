@@ -205,6 +205,9 @@ class PublicSite(Base):
     description = Column(Text)
     prefecture = Column(Text)
     category = Column(Text)
+    worry_target = Column(String(100))
+    guidance_reason = Column(Text)
+    skip_info = Column(Text)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 

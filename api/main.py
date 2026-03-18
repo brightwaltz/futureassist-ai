@@ -55,6 +55,33 @@ async def lifespan(app: FastAPI):
             except Exception:
                 pass  # Column already exists
 
+    # Add worry_target and guidance fields to public_sites table
+    async with engine.begin() as conn:
+        for col_name, col_def in [
+            ("worry_target", "VARCHAR(100)"),
+            ("guidance_reason", "TEXT"),
+            ("skip_info", "TEXT"),
+        ]:
+            try:
+                await conn.execute(
+                    text(f"ALTER TABLE public_sites ADD COLUMN {col_name} {col_def}")
+                )
+                logger.info(f"Added column public_sites.{col_name}")
+            except Exception:
+                pass  # Column already exists
+
+        # Index for worry_target lookup
+        try:
+            await conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_public_sites_worry_target "
+                    "ON public_sites(topic, worry_target) WHERE is_active = TRUE"
+                )
+            )
+            logger.info("Created index idx_public_sites_worry_target")
+        except Exception:
+            pass  # Index already exists
+
     # Ensure default tenant exists
     async with async_session() as db:
         result = await db.execute(

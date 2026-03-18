@@ -3,6 +3,34 @@
     "相続終活": {
       "display_name": "相続・終活",
       "description": "遺言、相続税、不動産登記等に関するLife Ability対話",
+      "worry_triage_options": [
+        {"key": "A", "label": "相続税がかかるかどうか", "worry_target": "相続税"},
+        {"key": "B", "label": "手続きの全体の流れ", "worry_target": "手続き全体像"},
+        {"key": "C", "label": "不動産の名義変更（相続登記）", "worry_target": "相続登記"},
+        {"key": "D", "label": "家族が揉めないためのルール", "worry_target": "遺言・家族トラブル予防"}
+      ],
+      "worry_deepdive_options": {
+        "相続登記": [
+          {"key": "A", "label": "自分で申請する方法"},
+          {"key": "B", "label": "専門家に頼むか判断したい"},
+          {"key": "C", "label": "そもそもどういう手続きか全体像が知りたい"}
+        ],
+        "相続税": [
+          {"key": "A", "label": "そもそも相続税がかかるか知りたい"},
+          {"key": "B", "label": "申告が必要か判断したい"},
+          {"key": "C", "label": "控除の仕組みを知りたい"}
+        ],
+        "手続き全体像": [
+          {"key": "A", "label": "何から始めればいいか知りたい"},
+          {"key": "B", "label": "期限があるものを把握したい"},
+          {"key": "C", "label": "誰に何を頼めばいいか知りたい"}
+        ],
+        "遺言・家族トラブル予防": [
+          {"key": "A", "label": "遺言書の種類と効力を知りたい"},
+          {"key": "B", "label": "遺産分割の基本ルールを知りたい"},
+          {"key": "C", "label": "家族間の話し合いの進め方を知りたい"}
+        ]
+      },
       "steps": {
         "information_organizing": {
           "system_instruction": "ユーザーの相続・終活に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
@@ -26,19 +54,19 @@
           "intro_message": "具体的な次の一歩をご案内します：",
           "default_sites": [
             {
-              "title": "法務局 - 相続登記手続き",
-              "url": "https://houmukyoku.moj.go.jp/homu/page7_000001_00014.html",
-              "description": "不動産の相続登記に関する手続き案内"
+              "title": "法務局 - 不動産登記の申請書様式について（相続登記）",
+              "url": "https://houmukyoku.moj.go.jp/homu/minji79.html",
+              "description": "相続登記の申請書様式と手続き概要"
             },
             {
-              "title": "国税庁 - 相続税の申告",
+              "title": "国税庁 - 相続税の申告要否判断",
               "url": "https://www.nta.go.jp/taxes/shiraberu/taxanswer/sozoku/souzokunavi.htm",
-              "description": "相続税に関する情報"
+              "description": "相続税がかかるかどうかを確認するナビゲーター"
             },
             {
-              "title": "日本公証人連合会 - 遺言",
-              "url": "https://www.koshonin.gr.jp/notary/ow01",
-              "description": "公正証書遺言の作成について"
+              "title": "法務省 - 遺言の基本",
+              "url": "https://www.moj.go.jp/MINJI/minji95.html",
+              "description": "遺言がある場合・ない場合の法的な扱いの違い"
             },
             {
               "title": "法テラス - 無料法律相談",
@@ -66,6 +94,34 @@
     "介護と健康": {
       "display_name": "介護・健康",
       "description": "介護保険、地域支援、健康管理に関するLife Ability対話",
+      "worry_triage_options": [
+        {"key": "A", "label": "介護保険の申請・利用方法", "worry_target": "介護保険の申請・利用"},
+        {"key": "B", "label": "相談窓口・地域の支援を知りたい", "worry_target": "相談窓口・地域支援"},
+        {"key": "C", "label": "介護サービスの選び方", "worry_target": "介護サービスの選び方"},
+        {"key": "D", "label": "介護と仕事の両立", "worry_target": "介護と仕事の両立"}
+      ],
+      "worry_deepdive_options": {
+        "介護保険の申請・利用": [
+          {"key": "A", "label": "申請の手順を知りたい"},
+          {"key": "B", "label": "認定調査の流れを知りたい"},
+          {"key": "C", "label": "利用できるサービスの種類を知りたい"}
+        ],
+        "相談窓口・地域支援": [
+          {"key": "A", "label": "地域包括支援センターについて知りたい"},
+          {"key": "B", "label": "ケアマネジャーの探し方を知りたい"},
+          {"key": "C", "label": "自治体の支援制度を知りたい"}
+        ],
+        "介護サービスの選び方": [
+          {"key": "A", "label": "在宅介護サービスを比較したい"},
+          {"key": "B", "label": "施設入所を検討したい"},
+          {"key": "C", "label": "費用の目安を知りたい"}
+        ],
+        "介護と仕事の両立": [
+          {"key": "A", "label": "介護休業制度を知りたい"},
+          {"key": "B", "label": "時短勤務・在宅勤務の相談方法"},
+          {"key": "C", "label": "両立のための時間管理のコツ"}
+        ]
+      },
       "steps": {
         "information_organizing": {
           "system_instruction": "ユーザーの介護・健康に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
@@ -124,6 +180,34 @@
     "家庭問題": {
       "display_name": "家庭問題",
       "description": "家族関係、DV相談、生活困窮等に関するLife Ability対話",
+      "worry_triage_options": [
+        {"key": "A", "label": "DV・暴力に関する相談", "worry_target": "DV・暴力問題"},
+        {"key": "B", "label": "家族関係の悩み（コミュニケーション）", "worry_target": "家族関係の悩み"},
+        {"key": "C", "label": "離婚・親権に関する問題", "worry_target": "離婚・親権問題"},
+        {"key": "D", "label": "生活困窮・経済的な不安", "worry_target": "生活困窮・経済的不安"}
+      ],
+      "worry_deepdive_options": {
+        "DV・暴力問題": [
+          {"key": "A", "label": "今すぐ安全を確保したい"},
+          {"key": "B", "label": "相談窓口を知りたい"},
+          {"key": "C", "label": "法的な対処方法を知りたい"}
+        ],
+        "家族関係の悩み": [
+          {"key": "A", "label": "親子関係の改善"},
+          {"key": "B", "label": "夫婦間のコミュニケーション"},
+          {"key": "C", "label": "介護をめぐる家族の意見の違い"}
+        ],
+        "離婚・親権問題": [
+          {"key": "A", "label": "離婚の手続きを知りたい"},
+          {"key": "B", "label": "親権・養育費について知りたい"},
+          {"key": "C", "label": "調停・裁判の流れを知りたい"}
+        ],
+        "生活困窮・経済的不安": [
+          {"key": "A", "label": "公的支援制度を知りたい"},
+          {"key": "B", "label": "住居の確保について"},
+          {"key": "C", "label": "就労支援について"}
+        ]
+      },
       "steps": {
         "information_organizing": {
           "system_instruction": "ユーザーの家庭問題について安全な環境で聞き取り、事実・感情・制約条件を整理してください。緊急性の判断も行ってください。",
@@ -175,6 +259,34 @@
     "お金と資産": {
       "display_name": "お金・資産管理",
       "description": "NISA、年金、家計管理に関するLife Ability対話",
+      "worry_triage_options": [
+        {"key": "A", "label": "資産形成・NISAを始めたい", "worry_target": "資産形成・NISA"},
+        {"key": "B", "label": "年金・老後資金が心配", "worry_target": "年金・老後資金"},
+        {"key": "C", "label": "家計の見直しをしたい", "worry_target": "家計の見直し"},
+        {"key": "D", "label": "借金・債務の問題", "worry_target": "借金・債務整理"}
+      ],
+      "worry_deepdive_options": {
+        "資産形成・NISA": [
+          {"key": "A", "label": "NISAの始め方を知りたい"},
+          {"key": "B", "label": "どれくらい積み立てればいいか知りたい"},
+          {"key": "C", "label": "リスクの考え方を知りたい"}
+        ],
+        "年金・老後資金": [
+          {"key": "A", "label": "自分の年金額を確認したい"},
+          {"key": "B", "label": "老後に必要な金額を知りたい"},
+          {"key": "C", "label": "年金以外の備え方を知りたい"}
+        ],
+        "家計の見直し": [
+          {"key": "A", "label": "固定費の削減方法を知りたい"},
+          {"key": "B", "label": "収支バランスの改善"},
+          {"key": "C", "label": "ライフプランに合わせた家計管理"}
+        ],
+        "借金・債務整理": [
+          {"key": "A", "label": "返済計画の立て方を知りたい"},
+          {"key": "B", "label": "債務整理の方法を知りたい"},
+          {"key": "C", "label": "相談窓口を知りたい"}
+        ]
+      },
       "steps": {
         "information_organizing": {
           "system_instruction": "ユーザーのお金・資産に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
@@ -265,6 +377,34 @@
     "仕事と生活": {
       "display_name": "仕事と生活",
       "description": "ワークライフバランス、キャリアに関するLife Ability対話",
+      "worry_triage_options": [
+        {"key": "A", "label": "働き方・労働条件を見直したい", "worry_target": "働き方・労働条件"},
+        {"key": "B", "label": "転職・キャリアの相談", "worry_target": "転職・キャリア相談"},
+        {"key": "C", "label": "メンタルヘルス・ストレス", "worry_target": "メンタルヘルス・ストレス"},
+        {"key": "D", "label": "育児・介護と仕事の両立", "worry_target": "育児・介護との両立"}
+      ],
+      "worry_deepdive_options": {
+        "働き方・労働条件": [
+          {"key": "A", "label": "残業・長時間労働の改善"},
+          {"key": "B", "label": "テレワーク・柔軟な働き方"},
+          {"key": "C", "label": "有給休暇・休業制度の活用"}
+        ],
+        "転職・キャリア相談": [
+          {"key": "A", "label": "転職のタイミングを知りたい"},
+          {"key": "B", "label": "自分に合った仕事を探したい"},
+          {"key": "C", "label": "スキルアップの方法を知りたい"}
+        ],
+        "メンタルヘルス・ストレス": [
+          {"key": "A", "label": "ストレスの原因を整理したい"},
+          {"key": "B", "label": "相談先を知りたい"},
+          {"key": "C", "label": "休職の制度を知りたい"}
+        ],
+        "育児・介護との両立": [
+          {"key": "A", "label": "育児休業・介護休業の制度を知りたい"},
+          {"key": "B", "label": "会社への相談方法を知りたい"},
+          {"key": "C", "label": "時間管理のコツを知りたい"}
+        ]
+      },
       "steps": {
         "information_organizing": {
           "system_instruction": "ユーザーの仕事と生活に関する悩みを受け止め、事実・感情・制約条件に分けて整理してください。",
