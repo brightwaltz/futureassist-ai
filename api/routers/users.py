@@ -12,6 +12,7 @@ from uuid import UUID
 from api.database import get_db
 from api.models.orm import User, Conversation
 from api.models.schemas import UserCreate, UserLogin, UserUpdate, UserResponse
+from api.services import point_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -50,6 +51,16 @@ async def login_user(data: UserLogin, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Award daily login points (idempotent: 1 per day)
+    try:
+        today_str = datetime.utcnow().strftime("%Y-%m-%d")
+        await point_service.award_points(
+            db, user.id, "daily_login", 10, reference_id=today_str
+        )
+    except Exception:
+        pass  # Don't break login if points fail
+
     return user
 
 

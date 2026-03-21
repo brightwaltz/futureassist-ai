@@ -17,6 +17,7 @@ from api.config import get_settings
 from api.models.orm import DEFAULT_TENANT_ID, User, Conversation
 from api.services.coaching_service import CoachingService, DIALOGUE_STATES
 from api.services.logging_service import log_conversation_start, log_message
+from api.services import point_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -467,6 +468,20 @@ async def coaching_websocket(ws: WebSocket):
                     except Exception as e:
                         logger.warning(f"Failed to log messages: {e}")
 
+                # Award points for consultation message
+                if state.get("user_id"):
+                    try:
+                        async with async_session() as pts_db:
+                            msg_ref = str(uuid4())
+                            await point_service.award_points(
+                                pts_db, state["user_id"],
+                                "consultation_message", 5,
+                                reference_id=msg_ref,
+                            )
+                            await pts_db.commit()
+                    except Exception as e:
+                        logger.debug(f"Point award failed (message): {e}")
+
                 # Persist state after each message
                 await _persist_state(conversation_id, state)
 
@@ -483,7 +498,21 @@ async def coaching_websocket(ws: WebSocket):
                 await ws.send_json({"type": "typing", "payload": {"is_typing": False}})
 
             elif msg_type == "end_session":
+                # Award consultation_complete points
                 if session_id and session_id in session_states:
+                    end_state = session_states[session_id]
+                    uid = end_state.get("user_id")
+                    if uid and conversation_id:
+                        try:
+                            async with async_session() as pts_db:
+                                await point_service.award_points(
+                                    pts_db, uid,
+                                    "consultation_complete", 30,
+                                    reference_id=str(conversation_id),
+                                )
+                                await pts_db.commit()
+                        except Exception as e:
+                            logger.debug(f"Point award failed (session complete): {e}")
                     del session_states[session_id]
                 await ws.send_json({
                     "type": "session_ended",

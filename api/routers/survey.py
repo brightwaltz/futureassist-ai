@@ -14,6 +14,7 @@ from api.models.schemas import (
 )
 from api.services.survey_service import SurveyService
 from api.services.logging_service import log_survey_responses
+from api.services import point_service
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,15 @@ async def submit_life_ability_survey(
             )
         except Exception as e:
             logger.warning(f"Failed to log survey responses: {e}")
+
+        # Award survey completion points
+        try:
+            await point_service.award_points(
+                db, data.user_id, "survey_complete", 50,
+                reference_id=str(survey.survey_id),
+            )
+        except Exception as e:
+            logger.warning(f"Failed to award survey points: {e}")
 
         return survey
     except Exception as e:

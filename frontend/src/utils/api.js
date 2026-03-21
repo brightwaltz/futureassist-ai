@@ -76,6 +76,16 @@ export const api = {
 
   // Health
   healthCheck: () => request("/health"),
+
+  // Points & Companion
+  getUserPoints: (userId) => request(`/points/${userId}`),
+  getCompanion: (userId) => request(`/companion/${userId}`),
+  feedCompanion: (userId) => request(`/companion/${userId}/feed`, { method: "POST" }),
+  renameCompanion: (userId, name) =>
+    request(`/companion/${userId}/rename`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
 };
 
 // ─── WebSocket ───

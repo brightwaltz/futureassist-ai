@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import { api } from "../utils/api";
 import ScoreTrendChart from "../components/ScoreTrendChart";
+import CompanionDashboard from "../components/CompanionDashboard";
 
 function ScoreLevel({ score }) {
   if (score == null) return <span className="text-gray-400">---</span>;
@@ -96,6 +97,11 @@ export default function MyDashboardPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h2 className="text-xl font-bold text-gray-900">マイダッシュボード</h2>
+
+      {/* Companion */}
+      {userId && (
+        <CompanionDashboard userId={userId} />
+      )}
 
       {/* Score Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

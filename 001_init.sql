@@ -215,3 +215,43 @@ ALTER TABLE public_sites ADD COLUMN IF NOT EXISTS skip_info TEXT;
 CREATE INDEX IF NOT EXISTS idx_public_sites_worry_target
   ON public_sites(topic, worry_target)
   WHERE is_active = TRUE;
+
+-- ─── ポイント残高 ───
+CREATE TABLE IF NOT EXISTS user_points (
+    id          SERIAL PRIMARY KEY,
+    user_id     INT REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+    total_points INT DEFAULT 0,
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── ポイント履歴（冪等性のためUNIQUE制約追加） ───
+CREATE TABLE IF NOT EXISTS point_history (
+    id          SERIAL PRIMARY KEY,
+    user_id     INT REFERENCES users(id) ON DELETE CASCADE,
+    action_type TEXT NOT NULL CHECK (action_type IN (
+        'consultation_message',
+        'consultation_complete',
+        'survey_complete',
+        'daily_login'
+    )),
+    points_earned INT NOT NULL,
+    reference_id  TEXT,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, action_type, reference_id)
+);
+
+-- ─── キャラクター育成状態 ───
+CREATE TABLE IF NOT EXISTS user_companion (
+    id              SERIAL PRIMARY KEY,
+    user_id         INT REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+    companion_name  TEXT DEFAULT '未名',
+    level           INT DEFAULT 1,
+    experience      INT DEFAULT 0,
+    mood            TEXT DEFAULT 'normal' CHECK (mood IN (
+        'sleeping', 'normal', 'happy', 'excited', 'loving'
+    )),
+    total_points_spent INT DEFAULT 0,
+    last_fed_at     TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);

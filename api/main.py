@@ -16,8 +16,9 @@ from sqlalchemy import select, text
 
 from api.config import get_settings
 from api.database import engine, Base, async_session
-from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis
+from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points
 from api.models.orm import Tenant, DEFAULT_TENANT_ID
+import api.models.points  # noqa: F401 — register ORM models for create_all
 from api.middleware.tenant import TenantMiddleware
 
 settings = get_settings()
@@ -82,6 +83,43 @@ async def lifespan(app: FastAPI):
         except Exception:
             pass  # Index already exists
 
+    # Create points & companion tables if they don't exist
+    async with engine.begin() as conn:
+        for stmt in [
+            """CREATE TABLE IF NOT EXISTS user_points (
+                id SERIAL PRIMARY KEY,
+                user_id INT REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+                total_points INT DEFAULT 0,
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+            """CREATE TABLE IF NOT EXISTS point_history (
+                id SERIAL PRIMARY KEY,
+                user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                action_type TEXT NOT NULL,
+                points_earned INT NOT NULL,
+                reference_id TEXT,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(user_id, action_type, reference_id)
+            )""",
+            """CREATE TABLE IF NOT EXISTS user_companion (
+                id SERIAL PRIMARY KEY,
+                user_id INT REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+                companion_name TEXT DEFAULT '未名',
+                level INT DEFAULT 1,
+                experience INT DEFAULT 0,
+                mood TEXT DEFAULT 'normal',
+                total_points_spent INT DEFAULT 0,
+                last_fed_at TIMESTAMPTZ,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )""",
+        ]:
+            try:
+                await conn.execute(text(stmt))
+            except Exception:
+                pass
+        logger.info("Points & companion tables verified")
+
     # Ensure default tenant exists
     async with async_session() as db:
         result = await db.execute(
@@ -138,6 +176,7 @@ app.include_router(consent.router, prefix="/api")
 app.include_router(public_sites.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(analysis.router, prefix="/api")
+app.include_router(points.router, prefix="/api")
 
 # ─── WebSocket ───
 app.include_router(ws.router)
