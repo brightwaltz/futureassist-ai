@@ -16,9 +16,10 @@ from sqlalchemy import select, text
 
 from api.config import get_settings
 from api.database import engine, Base, async_session
-from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points
+from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points, roi
 from api.models.orm import Tenant, DEFAULT_TENANT_ID
 import api.models.points  # noqa: F401 — register ORM models for create_all
+import api.models.orm  # noqa: F401 — ensure v3 models (LifeAbilityScore, RoiRecord) are registered
 from api.middleware.tenant import TenantMiddleware
 
 settings = get_settings()
@@ -82,6 +83,102 @@ async def lifespan(app: FastAPI):
             logger.info("Created index idx_public_sites_worry_target")
         except Exception:
             pass  # Index already exists
+
+    # ─── v3.0 HCM Privacy Schema (002) ───
+    # 002_hcm_privacy_schema.sql の内容をインライン適用（Render free tier向け）
+    async with engine.begin() as conn:
+        # pgvector拡張（対応DBのみ。失敗しても続行）
+        try:
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            logger.info("pgvector extension enabled")
+        except Exception as e:
+            logger.warning(f"pgvector not available (skipping): {e}")
+
+        # life_ability_scoresテーブル
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS life_ability_scores (
+                id              SERIAL PRIMARY KEY,
+                user_ext_id     UUID NOT NULL,
+                tenant_id       UUID REFERENCES tenants(id) ON DELETE SET NULL,
+                s1_info_org     FLOAT CHECK (s1_info_org    BETWEEN 0 AND 100),
+                s2_decision     FLOAT CHECK (s2_decision    BETWEEN 0 AND 100),
+                s3_action       FLOAT CHECK (s3_action      BETWEEN 0 AND 100),
+                s4_stability    FLOAT CHECK (s4_stability   BETWEEN 0 AND 100),
+                s5_resource     FLOAT CHECK (s5_resource    BETWEEN 0 AND 100),
+                composite_score FLOAT CHECK (composite_score BETWEEN 0 AND 100),
+                ema_score       FLOAT CHECK (ema_score      BETWEEN 0 AND 100),
+                source          TEXT DEFAULT 'survey',
+                survey_id       UUID,
+                created_at      TIMESTAMPTZ DEFAULT NOW()
+            )
+        """))
+        await conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_la_scores_user "
+            "ON life_ability_scores(user_ext_id, created_at DESC)"
+        ))
+        await conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_la_scores_tenant "
+            "ON life_ability_scores(tenant_id, created_at DESC)"
+        ))
+
+        # roi_recordsテーブル
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS roi_records (
+                id                    SERIAL PRIMARY KEY,
+                tenant_id             UUID REFERENCES tenants(id) ON DELETE CASCADE,
+                period_start          DATE NOT NULL,
+                period_end            DATE NOT NULL,
+                presenteeism_loss_jpy FLOAT,
+                absenteeism_loss_jpy  FLOAT,
+                estimated_roi_jpy     FLOAT,
+                roi_ratio             FLOAT,
+                affected_headcount    INT,
+                avg_daily_wage_jpy    FLOAT,
+                avg_la_score_before   FLOAT,
+                avg_la_score_after    FLOAT,
+                intervention_cost_jpy FLOAT,
+                metadata              JSONB DEFAULT '{}',
+                created_at            TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(tenant_id, period_start, period_end)
+            )
+        """))
+        await conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_roi_records_tenant "
+            "ON roi_records(tenant_id, period_start DESC)"
+        ))
+
+        # dashboard_analyticsマテリアライズドビュー（K-匿名性 K=5）
+        try:
+            await conn.execute(text("""
+                CREATE MATERIALIZED VIEW IF NOT EXISTS dashboard_analytics AS
+                SELECT
+                    las.tenant_id,
+                    u.age_group,
+                    u.department,
+                    COUNT(DISTINCT las.user_ext_id)   AS headcount,
+                    ROUND(AVG(las.s1_info_org)::NUMERIC, 2)     AS avg_s1,
+                    ROUND(AVG(las.s2_decision)::NUMERIC, 2)     AS avg_s2,
+                    ROUND(AVG(las.s3_action)::NUMERIC, 2)       AS avg_s3,
+                    ROUND(AVG(las.s4_stability)::NUMERIC, 2)    AS avg_s4,
+                    ROUND(AVG(las.s5_resource)::NUMERIC, 2)     AS avg_s5,
+                    ROUND(AVG(las.composite_score)::NUMERIC, 2) AS avg_composite,
+                    ROUND(AVG(las.ema_score)::NUMERIC, 2)       AS avg_ema,
+                    MAX(las.created_at)                          AS latest_score_at
+                FROM life_ability_scores las
+                JOIN users u ON u.external_id = las.user_ext_id
+                WHERE las.created_at >= NOW() - INTERVAL '90 days'
+                GROUP BY las.tenant_id, u.age_group, u.department
+                HAVING COUNT(DISTINCT las.user_ext_id) >= 5
+            """))
+            await conn.execute(text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_dashboard_analytics_pk "
+                "ON dashboard_analytics(tenant_id, age_group, department)"
+            ))
+            logger.info("dashboard_analytics materialized view created")
+        except Exception as e:
+            logger.warning(f"dashboard_analytics view already exists or failed: {e}")
+
+        logger.info("v3.0 HCM schema (002) applied")
 
     # Create points & companion tables if they don't exist
     async with engine.begin() as conn:
@@ -177,6 +274,7 @@ app.include_router(public_sites.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(analysis.router, prefix="/api")
 app.include_router(points.router, prefix="/api")
+app.include_router(roi.router, prefix="/api")
 
 # ─── WebSocket ───
 app.include_router(ws.router)

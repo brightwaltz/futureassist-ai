@@ -15,6 +15,7 @@ from api.models.schemas import (
 from api.services.survey_service import SurveyService
 from api.services.logging_service import log_survey_responses
 from api.services import point_service
+from api.services.life_ability_scorer import LifeAbilityScorer
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,26 @@ async def submit_life_ability_survey(
         except Exception as e:
             logger.warning(f"Failed to log survey responses: {e}")
 
+        # v3.0: Life Ability 5要素スコアを算出・保存
+        try:
+            answers_for_scoring = [
+                {"question_id": a.question_id, "value": a.value}
+                for a in data.answers
+            ]
+            scorer = LifeAbilityScorer(db)
+            la_score = await scorer.compute_and_save(
+                user_id=data.user_id,
+                answers=answers_for_scoring,
+                survey_id=survey.survey_id,
+                source="survey",
+            )
+            logger.info(
+                f"Life Ability score saved: user={data.user_id}, "
+                f"composite={la_score.composite_score}, ema={la_score.ema_score}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to compute Life Ability score: {e}")
+
         # Award survey completion points
         try:
             await point_service.award_points(
@@ -94,3 +115,29 @@ async def get_survey_history(
     service = SurveyService(db)
     surveys = await service.get_user_surveys(user_id, limit)
     return surveys
+
+
+@router.get("/life-ability/{user_id}")
+async def get_life_ability_score(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    ユーザーの最新Life Ability 5要素スコアと履歴を取得する（v3.0）。
+    フロントエンドの個人ダッシュボード（レーダーチャート）用。
+    """
+    scorer = LifeAbilityScorer(db)
+    latest = await scorer.get_latest_score(user_id)
+    history = await scorer.get_score_history(user_id, limit=30)
+
+    return {
+        "latest": latest.to_dict() if latest else None,
+        "history": history,
+        "elements": {
+            "s1_info_org": "情報整理力",
+            "s2_decision": "意思決定納得度",
+            "s3_action": "行動移行力",
+            "s4_stability": "生活運用安定性",
+            "s5_resource": "可処分リソース創出力",
+        },
+    }
