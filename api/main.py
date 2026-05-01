@@ -18,6 +18,7 @@ from api.config import get_settings
 from api.database import engine, Base, async_session
 from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points, roi
 from api.models.orm import Tenant, DEFAULT_TENANT_ID
+from api.services.hybrid_search import seed_public_site_embeddings
 import api.models.points  # noqa: F401 — register ORM models for create_all
 import api.models.orm  # noqa: F401 — ensure v3 models (LifeAbilityScore, RoiRecord) are registered
 from api.middleware.tenant import TenantMiddleware
@@ -179,6 +180,32 @@ async def lifespan(app: FastAPI):
             logger.warning(f"dashboard_analytics view already exists or failed: {e}")
 
         logger.info("v3.0 HCM schema (002) applied")
+
+    # ─── Phase 2: public_sites に embedding カラムを追加 ───
+    # pgvector が使えない環境では try/except でスキップ
+    async with engine.begin() as conn:
+        try:
+            await conn.execute(
+                text(f"ALTER TABLE public_sites ADD COLUMN IF NOT EXISTS embedding vector(1536)")
+            )
+            await conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_public_sites_embedding "
+                    "ON public_sites USING ivfflat (embedding vector_cosine_ops) WITH (lists = 50)"
+                )
+            )
+            logger.info("public_sites.embedding column & index verified")
+        except Exception as e:
+            logger.warning(f"public_sites embedding column skipped (pgvector unavailable?): {e}")
+
+    # ─── Phase 2: 起動時に未エンベッドの公的サイトを一括処理 ───
+    async with async_session() as db:
+        try:
+            embedded_count = await seed_public_site_embeddings(db, max_sites=50)
+            if embedded_count > 0:
+                logger.info(f"HybridSearch: {embedded_count} public sites embedded at startup")
+        except Exception as e:
+            logger.warning(f"seed_public_site_embeddings failed (non-fatal): {e}")
 
     # Create points & companion tables if they don't exist
     async with engine.begin() as conn:
