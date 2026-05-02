@@ -4,6 +4,90 @@ import { useUser } from "../contexts/UserContext";
 import { api } from "../utils/api";
 import ScoreTrendChart from "../components/ScoreTrendChart";
 import CompanionDashboard from "../components/CompanionDashboard";
+import {
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ResponsiveContainer, Tooltip,
+} from "recharts";
+
+// ─── LA 5要素 RadarChart コンポーネント ───────────────────────────────────────
+const LA_LABELS = {
+  s1_info_org:  "情報整理力",
+  s2_decision:  "意思決定",
+  s3_action:    "行動移行力",
+  s4_stability: "生活安定性",
+  s5_resource:  "リソース創出",
+};
+
+function LifeAbilityRadar({ history }) {
+  if (!history || history.length === 0) return null;
+  const latest = history[0]; // 最新スコア
+
+  const data = Object.entries(LA_LABELS).map(([key, label]) => ({
+    subject: label,
+    score: latest[key] != null ? Math.round(latest[key]) : 0,
+    fullMark: 100,
+  }));
+
+  const hasData = data.some((d) => d.score > 0);
+  if (!hasData) return null;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-gray-900">Life Ability 5要素レーダー</h3>
+        <span className="text-xs text-gray-400">
+          最新スコア（{latest.created_at ? new Date(latest.created_at).toLocaleDateString("ja-JP") : "---"}）
+        </span>
+      </div>
+      <div className="flex flex-col md:flex-row items-center gap-6">
+        {/* Radar */}
+        <div className="w-full md:w-1/2" style={{ height: 260 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={data} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+              <PolarGrid stroke="#e5e7eb" />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#6b7280" }} />
+              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 9, fill: "#9ca3af" }} tickCount={3} />
+              <Radar
+                name="スコア"
+                dataKey="score"
+                stroke="#6366f1"
+                fill="#6366f1"
+                fillOpacity={0.25}
+                strokeWidth={2}
+              />
+              <Tooltip
+                formatter={(v) => [`${v}点`, "スコア"]}
+                contentStyle={{ fontSize: 12, borderRadius: 8 }}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Score list */}
+        <div className="w-full md:w-1/2 space-y-2">
+          {data.map((d) => (
+            <div key={d.subject} className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 w-24 shrink-0">{d.subject}</span>
+              <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div
+                  className="h-2 rounded-full bg-indigo-500 transition-all duration-500"
+                  style={{ width: `${d.score}%` }}
+                />
+              </div>
+              <span className="text-xs font-semibold text-gray-700 w-8 text-right">
+                {d.score}
+              </span>
+            </div>
+          ))}
+          {latest.ema_score != null && (
+            <p className="text-xs text-gray-400 pt-1">
+              EMA総合スコア: <span className="font-semibold text-indigo-600">{latest.ema_score.toFixed(1)}</span>
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ScoreLevel({ score }) {
   if (score == null) return <span className="text-gray-400">---</span>;
@@ -28,6 +112,7 @@ export default function MyDashboardPage() {
   const [wellbeing, setWellbeing] = useState(null);
   const [surveys, setSurveys] = useState([]);
   const [recentConversations, setRecentConversations] = useState([]);
+  const [laHistory, setLaHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +121,16 @@ export default function MyDashboardPage() {
 
   async function loadData() {
     try {
-      const [wb, sv, convs] = await Promise.allSettled([
+      const [wb, sv, convs, la] = await Promise.allSettled([
         api.getWellbeing(userId),
         api.getSurveyHistory(userId),
         api.getUserConversations(userId, 1),
+        api.getLifeAbilityHistory(userId),
       ]);
       if (wb.status === "fulfilled") setWellbeing(wb.value);
       if (sv.status === "fulfilled") setSurveys(sv.value);
       if (convs.status === "fulfilled") setRecentConversations((convs.value.items || []).slice(0, 3));
+      if (la.status === "fulfilled") setLaHistory(la.value || []);
     } catch (err) {
       console.error("Dashboard data load failed:", err);
     } finally {
@@ -173,38 +260,8 @@ export default function MyDashboardPage() {
         </div>
       )}
 
-      {/* Life Ability 5 Elements */}
-      {wellbeing?.components?.life_ability_score != null && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Life Ability 5要素</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-            {[
-              { key: "information_organizing", label: "情報整理力" },
-              { key: "decision_satisfaction", label: "意思決定納得度" },
-              { key: "action_bridging", label: "行動移行力" },
-              { key: "life_stability", label: "生活運用安定性" },
-              { key: "resource_optimization", label: "リソース創出力" },
-            ].map((el) => (
-              <div key={el.key} className="text-center">
-                <p className="text-xs text-gray-500">{el.label}</p>
-                <p className="text-lg font-bold text-primary-600">
-                  {wellbeing?.components?.life_ability_elements?.[el.key]?.toFixed(1) ?? "---"}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-6">
-            <div>
-              <span className="text-sm text-gray-500">ライフアビリティ総合: </span>
-              <ScoreLevel score={wellbeing.components.life_ability_score} />
-            </div>
-            <div>
-              <span className="text-sm text-gray-500">満足度: </span>
-              <ScoreLevel score={wellbeing.components.satisfaction_score} />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Life Ability 5要素 RadarChart（Phase 3） */}
+      {laHistory.length > 0 && <LifeAbilityRadar history={laHistory} />}
 
       {/* Survey History Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

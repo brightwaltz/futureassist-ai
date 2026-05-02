@@ -7,6 +7,7 @@ import MyDashboardPage from "./pages/MyDashboardPage";
 import ConversationHistoryPage from "./pages/ConversationHistoryPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import TriagePage from "./pages/TriagePage";
 import AdminLogin from "./admin/AdminLogin";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -47,6 +48,12 @@ function MainLayout() {
                   className="text-sm text-gray-600 hover:text-primary-600 transition"
                 >
                   相談する
+                </Link>
+                <Link
+                  to="/triage"
+                  className="text-sm text-gray-600 hover:text-primary-600 transition"
+                >
+                  状況整理
                 </Link>
                 <Link
                   to="/survey"
@@ -91,6 +98,7 @@ function MainLayout() {
       <main>
         <Routes>
           <Route path="/" element={<ChatPage />} />
+          <Route path="/triage" element={<TriagePage />} />
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/dashboard" element={<MyDashboardPage />} />
           <Route path="/history" element={<ConversationHistoryPage />} />
