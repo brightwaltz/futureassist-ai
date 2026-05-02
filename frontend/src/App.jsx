@@ -17,6 +17,7 @@ import CoachingPage from "./pages/CoachingPage";
 import ResourcePage from "./pages/ResourcePage";
 import SessionEndPage from "./pages/SessionEndPage";
 import FollowupPage from "./pages/FollowupPage";
+import EveryoneDashboardPage from "./pages/EveryoneDashboardPage";
 
 // ── Admin ──────────────────────────────────────────────────────────────────
 import AdminLogin from "./admin/AdminLogin";
@@ -30,9 +31,10 @@ import TenantLayout from "./TenantLayout";
 
 // ── Nav items definition ────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { to: "/check",     label: "はじめの1分チェック", icon: "⏱️" },
-  { to: "/dashboard", label: "わたしのダッシュボード", icon: "📊" },
-  { to: "/history",   label: "会話履歴",            icon: "💬" },
+  { to: "/check",     label: "はじめの1分チェック",     icon: "⏱️" },
+  { to: "/dashboard", label: "わたしのダッシュボード",   icon: "📊" },
+  { to: "/everyone",  label: "みんなのダッシュボード",   icon: "🌐" },
+  { to: "/history",   label: "会話履歴",                icon: "💬" },
 ];
 
 function NavLink({ to, label, icon }) {
@@ -138,6 +140,9 @@ function MainLayout() {
 
           {/* 1週間後フォローアップ（Step K）*/}
           <Route path="/followup"       element={<FollowupPage />} />
+
+          {/* みんなのダッシュボード（管理者用） */}
+          <Route path="/everyone"       element={<EveryoneDashboardPage />} />
 
           {/* 既存ルート */}
           <Route path="/survey"         element={<SurveyPage />} />
