@@ -168,20 +168,22 @@ export default function ChatPage() {
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-xl mx-auto px-4 py-8">
 
-          {/* コンパニオン */}
-          <div className="flex justify-center mb-6">
+          {/* タイトル + コンパニオン */}
+          <div className="text-center mb-5">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">
+              今、ちょっと気になっていることはありますか？
+            </h2>
+            <p className="text-xs text-gray-500">
+              うまく言葉にできなくても大丈夫です。
+            </p>
+          </div>
+          <div className="flex justify-center mb-5">
             <HiyokoCompanion
               mood="happy"
-              message={
-                <>
-                  <span className="block">今、ちょっと気になっていることはありますか？</span>
-                  <span className="block text-xs text-gray-400 mt-1">
-                    うまく言葉にできなくても大丈夫です。
-                  </span>
-                </>
-              }
+              message="モヤモヤを整理して、次にやることまで一緒に決めます！"
               size="md"
               animated
+              layout="row"
             />
           </div>
 
@@ -217,6 +219,21 @@ export default function ChatPage() {
                   整理する →
                 </button>
               </div>
+            </div>
+
+            {/* タグサジェスチョン (プロトタイプ準拠) */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["家族・親のこと", "将来のお金", "健康のこと", "働き方"].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setMoyanText((s) => (s ? `${s} ${tag}` : tag))}
+                  className="text-xs bg-white border border-gray-200 px-3 py-1 rounded-full
+                             text-gray-500 hover:border-primary-300 hover:text-primary-600 transition"
+                >
+                  # {tag}
+                </button>
+              ))}
             </div>
           </form>
 
