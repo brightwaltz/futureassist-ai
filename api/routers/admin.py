@@ -22,6 +22,7 @@ from api.database import get_db
 from api.models.orm import (
     Tenant, Conversation, ConversationMessage,
     SurveyResponse as SurveyResponseModel,
+    QuestionBankEntry,
     Survey, User,
 )
 
@@ -233,9 +234,13 @@ async def get_survey_stats(
     db: AsyncSession = Depends(get_db),
     _admin: str = Depends(verify_admin),
 ):
-    """Per-question aggregation: avg, stddev, count."""
+    """Per-question aggregation: avg, stddev, count.
+    question_text は survey_responses に保存されていない場合も
+    question_bank テーブルから補完する。
+    """
     tid = await _resolve_tenant(tenant_slug, db)
 
+    # ─── 集計クエリ ───
     rows = (await db.execute(
         select(
             SurveyResponseModel.question_id,
@@ -252,11 +257,25 @@ async def get_survey_stats(
         )
     )).all()
 
+    # ─── question_bank からテキストを補完 ───
+    # question_id（文字列 "1","2",…）と question_bank.display_order または id を照合
+    qb_rows = (await db.execute(
+        select(QuestionBankEntry.id, QuestionBankEntry.question_text)
+        .order_by(QuestionBankEntry.display_order, QuestionBankEntry.id)
+    )).all()
+    # id を文字列キーとして辞書化
+    qb_map: dict[str, str] = {str(q.id): q.question_text for q in qb_rows}
+
     return {
         "questions": [
             {
                 "question_id": r.question_id,
-                "question_text": r.question_text,
+                # survey_response の text → question_bank → フォールバック
+                "question_text": (
+                    r.question_text
+                    or qb_map.get(str(r.question_id))
+                    or f"質問 {r.question_id}"
+                ),
                 "avg_value": round(r.avg_value, 2) if r.avg_value is not None else None,
                 "stddev_value": round(r.stddev_value, 2) if r.stddev_value is not None else None,
                 "response_count": r.response_count,

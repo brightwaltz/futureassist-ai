@@ -184,8 +184,9 @@ class RoiCalculator:
             """),
             {
                 "tenant_id": str(tenant_id),
-                "start": period_start.isoformat(),
-                "end": period_end.isoformat(),
+                # asyncpg requires native date objects, not isoformat strings
+                "start": period_start,
+                "end": period_end,
             },
         )
         row = result.fetchone()
@@ -271,8 +272,9 @@ class RoiCalculator:
             """),
             {
                 "tenant_id": str(tenant_id),
-                "period_start": period_start.isoformat(),
-                "period_end": period_end.isoformat(),
+                # asyncpg requires native date objects, not isoformat strings
+                "period_start": period_start,
+                "period_end": period_end,
                 "presenteeism_loss": roi.presenteeism_loss_jpy,
                 "absenteeism_loss": roi.absenteeism_loss_jpy,
                 "estimated_roi": roi.estimated_roi_jpy,
