@@ -43,6 +43,7 @@ class UserResponse(BaseModel):
     id: int
     external_id: UUID
     name: str
+    email: Optional[str] = None
     age_group: Optional[str]
     company: Optional[str] = None
     department: Optional[str] = None
