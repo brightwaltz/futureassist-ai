@@ -33,7 +33,6 @@ import TenantLayout from "./TenantLayout";
 const NAV_ITEMS = [
   { to: "/check",     label: "はじめの1分チェック",     icon: "⏱️" },
   { to: "/dashboard", label: "わたしのダッシュボード",   icon: "📊" },
-  { to: "/everyone",  label: "みんなのダッシュボード",   icon: "🌐" },
   { to: "/history",   label: "会話履歴",                icon: "💬" },
 ];
 
@@ -141,9 +140,6 @@ function MainLayout() {
           {/* 1週間後フォローアップ（Step K）*/}
           <Route path="/followup"       element={<FollowupPage />} />
 
-          {/* みんなのダッシュボード（管理者用） */}
-          <Route path="/everyone"       element={<EveryoneDashboardPage />} />
-
           {/* 既存ルート */}
           <Route path="/survey"         element={<SurveyPage />} />
           <Route path="/dashboard"      element={<MyDashboardPage />} />
@@ -165,6 +161,7 @@ export default function App() {
         <Route path="conversations/:conversationId" element={<AdminConversationDetail />} />
         <Route path="surveys"                       element={<AdminSurveys />} />
         <Route path="analysis"                      element={<AdminAnalysis />} />
+        <Route path="everyone"                      element={<EveryoneDashboardPage />} />
       </Route>
       <Route path="/t/:tenantSlug/*"                element={<TenantLayout />} />
       <Route path="/*"                              element={<MainLayout />} />
