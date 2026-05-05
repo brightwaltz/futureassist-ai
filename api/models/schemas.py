@@ -36,6 +36,7 @@ class UserUpdate(BaseModel):
 
 
 class UserLogin(BaseModel):
+    """Legacy passwordless login (kept for backward compat during migration)."""
     email: str
 
 
@@ -49,10 +50,92 @@ class UserResponse(BaseModel):
     department: Optional[str] = None
     position: Optional[str] = None
     consent_status: bool
+    email_verified: Optional[bool] = False
+    mfa_enabled: Optional[bool] = False
+    auth_provider: Optional[str] = "password"
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# ─── Auth Enhancement schemas (002 migration) ──────────────────────────
+
+class AuthRegister(BaseModel):
+    """POST /auth/register — full account creation with password."""
+    name: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=8, max_length=128)
+    age_group: Optional[str] = Field(
+        None,
+        pattern=r"^(10代|20代|30代|40代|50代|60代|70代以上)$"
+    )
+    company: str = Field(..., min_length=1, max_length=200)
+    department: Optional[str] = Field(None, max_length=200)
+    position: Optional[str] = Field(None, max_length=200)
+
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str
+
+
+class AuthRefresh(BaseModel):
+    refresh_token: str
+
+
+class AuthTokenResponse(BaseModel):
+    """Successful login/refresh response."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int  # seconds until access_token expires
+    user: UserResponse
+
+
+class AuthMfaRequiredResponse(BaseModel):
+    """Returned when password is correct but MFA is required."""
+    mfa_required: bool = True
+    mfa_challenge_token: str  # short-lived signed token to present at /auth/mfa/challenge
+
+
+class AuthMfaChallenge(BaseModel):
+    mfa_challenge_token: str
+    code: str = Field(..., min_length=6, max_length=8)
+
+
+class AuthMfaSetupResponse(BaseModel):
+    secret: str           # base32, for fallback manual entry
+    otpauth_uri: str      # otpauth://... — feed into authenticator
+    qr_code_data_url: str # data:image/png;base64,...
+
+
+class AuthMfaVerify(BaseModel):
+    code: str = Field(..., min_length=6, max_length=8)
+
+
+class AuthEmailVerify(BaseModel):
+    token: str
+
+
+class AuthPasswordResetRequest(BaseModel):
+    email: str
+
+
+class AuthPasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class AuthGoogleCallback(BaseModel):
+    code: str
+    state: Optional[str] = None
+
+
+class AuthSimpleMessage(BaseModel):
+    """Generic ack response."""
+    ok: bool = True
+    message: str = "ok"
 
 
 # ─── Sessions ───

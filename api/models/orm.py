@@ -66,6 +66,15 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # ─── Auth Enhancement (002 migration) ───────────────────────────────
+    password_hash  = Column(Text, nullable=True)         # bcrypt; null for legacy/google-only users
+    email_verified = Column(Boolean, nullable=False, server_default="false", default=False)
+    totp_secret    = Column(Text, nullable=True)         # base32 secret (pyotp)
+    mfa_enabled    = Column(Boolean, nullable=False, server_default="false", default=False)
+    google_id      = Column(Text, unique=True, nullable=True)
+    auth_provider  = Column(Text, nullable=False, server_default="password", default="password")
+    last_login_at  = Column(DateTime(timezone=True), nullable=True)
+
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     surveys = relationship("Survey", back_populates="user", cascade="all, delete-orphan")
     metrics = relationship("MetricsLogEntry", back_populates="user", cascade="all, delete-orphan")
@@ -336,3 +345,50 @@ class RoiRecord(Base):
         Index("ix_roi_records_tenant", "tenant_id", "period_start"),
         UniqueConstraint("tenant_id", "period_start", "period_end", name="uq_roi_period"),
     )
+
+
+# ════════════════════════════════════════════════════════════════════════
+# Auth Enhancement (002 migration) — JWT refresh / email verify / pwd reset
+# ════════════════════════════════════════════════════════════════════════
+
+class RefreshToken(Base):
+    """Server-side store for JWT refresh tokens. token_hash is SHA-256."""
+    __tablename__ = "refresh_tokens"
+
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    user_id     = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash  = Column(Text, nullable=False, unique=True)
+    issued_at   = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    expires_at  = Column(DateTime(timezone=True), nullable=False)
+    revoked_at  = Column(DateTime(timezone=True), nullable=True)
+    rotated_to  = Column(Integer, ForeignKey("refresh_tokens.id", ondelete="SET NULL"), nullable=True)
+    user_agent  = Column(Text, nullable=True)
+    ip_address  = Column(Text, nullable=True)
+
+    __table_args__ = (
+        Index("idx_refresh_tokens_user", "user_id", "expires_at"),
+    )
+
+
+class EmailVerificationToken(Base):
+    """Single-use email verification tokens (registration)."""
+    __tablename__ = "email_verification_tokens"
+
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    user_id      = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash   = Column(Text, nullable=False, unique=True)
+    issued_at    = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    expires_at   = Column(DateTime(timezone=True), nullable=False)
+    consumed_at  = Column(DateTime(timezone=True), nullable=True)
+
+
+class PasswordResetToken(Base):
+    """Single-use password reset tokens."""
+    __tablename__ = "password_reset_tokens"
+
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    user_id      = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash   = Column(Text, nullable=False, unique=True)
+    issued_at    = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    expires_at   = Column(DateTime(timezone=True), nullable=False)
+    consumed_at  = Column(DateTime(timezone=True), nullable=True)

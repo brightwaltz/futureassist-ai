@@ -14,11 +14,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy import select, text
 
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.responses import JSONResponse
+
 from api.config import get_settings
 from api.database import engine, Base, async_session
-from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points, roi
+from api.routers import users, chat, survey, heroic, metrics, consent, public_sites, ws, admin, analysis, points, roi, auth
 from api.models.orm import Tenant, DEFAULT_TENANT_ID
 from api.services.hybrid_search import seed_public_site_embeddings
+from api.services.rate_limit import LIMITER
 import api.models.points  # noqa: F401 — register ORM models for create_all
 import api.models.orm  # noqa: F401 — ensure v3 models (LifeAbilityScore, RoiRecord) are registered
 from api.middleware.tenant import TenantMiddleware
@@ -207,6 +212,86 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"seed_public_site_embeddings failed (non-fatal): {e}")
 
+    # ─── Auth Enhancement (002 migration) ───
+    # api/db_migrations/002_auth_enhancement.sql の内容をインライン適用
+    async with engine.begin() as conn:
+        # users テーブルへ列追加（IF NOT EXISTS で冪等）
+        for col_name, col_def in [
+            ("password_hash",  "TEXT"),
+            ("email_verified", "BOOLEAN NOT NULL DEFAULT FALSE"),
+            ("totp_secret",    "TEXT"),
+            ("mfa_enabled",    "BOOLEAN NOT NULL DEFAULT FALSE"),
+            ("google_id",      "TEXT"),
+            ("auth_provider",  "TEXT NOT NULL DEFAULT 'password'"),
+            ("last_login_at",  "TIMESTAMPTZ"),
+        ]:
+            try:
+                await conn.execute(
+                    text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
+                )
+            except Exception as e:
+                logger.warning(f"users.{col_name} migration skipped: {e}")
+
+        # google_id の UNIQUE 制約は CREATE UNIQUE INDEX で代替（IF NOT EXISTS 利用可能）
+        try:
+            await conn.execute(text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_google_id "
+                "ON users(google_id) WHERE google_id IS NOT NULL"
+            ))
+        except Exception as e:
+            logger.warning(f"users.google_id unique index skipped: {e}")
+
+        # 認証関連テーブル
+        for stmt in [
+            """CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id          SERIAL PRIMARY KEY,
+                user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash  TEXT NOT NULL UNIQUE,
+                issued_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                expires_at  TIMESTAMPTZ NOT NULL,
+                revoked_at  TIMESTAMPTZ,
+                rotated_to  INT REFERENCES refresh_tokens(id) ON DELETE SET NULL,
+                user_agent  TEXT,
+                ip_address  TEXT
+            )""",
+            "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user "
+            "ON refresh_tokens(user_id, expires_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_active "
+            "ON refresh_tokens(user_id) WHERE revoked_at IS NULL",
+            """CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                id          SERIAL PRIMARY KEY,
+                user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash  TEXT NOT NULL UNIQUE,
+                issued_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                expires_at  TIMESTAMPTZ NOT NULL,
+                consumed_at TIMESTAMPTZ
+            )""",
+            "CREATE INDEX IF NOT EXISTS idx_email_verification_user "
+            "ON email_verification_tokens(user_id, expires_at DESC)",
+            """CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id          SERIAL PRIMARY KEY,
+                user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token_hash  TEXT NOT NULL UNIQUE,
+                issued_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                expires_at  TIMESTAMPTZ NOT NULL,
+                consumed_at TIMESTAMPTZ
+            )""",
+            "CREATE INDEX IF NOT EXISTS idx_password_reset_user "
+            "ON password_reset_tokens(user_id, expires_at DESC)",
+            # 既存ユーザーを legacy_passwordless としてマーク（password_hash が NULL なら）
+            """UPDATE users
+                  SET auth_provider = 'legacy_passwordless'
+                WHERE password_hash IS NULL
+                  AND google_id IS NULL
+                  AND auth_provider = 'password'""",
+        ]:
+            try:
+                await conn.execute(text(stmt))
+            except Exception as e:
+                logger.warning(f"auth migration stmt skipped: {e}")
+
+        logger.info("Auth enhancement schema (002) applied")
+
     # Create points & companion tables if they don't exist
     async with engine.begin() as conn:
         for stmt in [
@@ -278,6 +363,27 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+# ─── Rate Limiter (slowapi) ───
+# Must be registered before routers; LIMITER.limit() decorators on auth endpoints
+# read this state via app.state.limiter.
+app.state.limiter = LIMITER
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": (
+                "リクエストが多すぎます。しばらく待ってから再試行してください。"
+                f"（制限: {exc.detail}）"
+            ),
+        },
+        headers={"Retry-After": "60"},
+    )
+
+
 # Tenant resolution middleware (must be added before CORS)
 app.add_middleware(TenantMiddleware)
 
@@ -291,6 +397,7 @@ app.add_middleware(
 )
 
 # ─── API Routers (all under /api/) ───
+app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(survey.router, prefix="/api")

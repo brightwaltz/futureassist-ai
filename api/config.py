@@ -28,6 +28,45 @@ class Settings(BaseSettings):
     admin_username: str = ""
     admin_password: str = ""
 
+    # ─── Auth Enhancement: JWT ─────────────────────────────────────────────
+    jwt_secret: str = ""          # If empty, falls back to app_secret_key at runtime
+    jwt_algorithm: str = "HS256"
+    jwt_access_ttl_min: int = 15  # 15 minutes
+    jwt_refresh_ttl_days: int = 7
+
+    # ─── Auth Enhancement: SMTP (email verify / password reset) ──────────
+    smtp_host: str = ""           # e.g. "smtp.gmail.com"
+    smtp_port: int = 587          # STARTTLS
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""           # e.g. "no-reply@futureassist-ai.com"
+    smtp_use_tls: bool = True
+
+    # ─── Auth Enhancement: Frontend URL (for verify/reset links) ────────
+    frontend_url: str = "https://futureassist-ai.onrender.com"
+
+    # ─── Auth Enhancement: Google OAuth ──────────────────────────────────
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = ""  # default computed: {frontend_url}/auth/google/callback
+
+    @property
+    def jwt_signing_key(self) -> str:
+        """Return JWT secret with fallback to app_secret_key."""
+        return self.jwt_secret or self.app_secret_key
+
+    @property
+    def smtp_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password and self.smtp_from)
+
+    @property
+    def google_oauth_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def google_redirect_url(self) -> str:
+        return self.google_redirect_uri or f"{self.frontend_url.rstrip('/')}/auth/google/callback"
+
     @property
     def async_database_url(self) -> str:
         """Convert DATABASE_URL to async format for SQLAlchemy."""
