@@ -18,6 +18,10 @@ import ResourcePage from "./pages/ResourcePage";
 import SessionEndPage from "./pages/SessionEndPage";
 import FollowupPage from "./pages/FollowupPage";
 import EveryoneDashboardPage from "./pages/EveryoneDashboardPage";
+import AuthVerifyEmailPage  from "./pages/AuthVerifyEmailPage";
+import AuthPasswordResetPage from "./pages/AuthPasswordResetPage";
+import AuthGoogleFinishPage  from "./pages/AuthGoogleFinishPage";
+import MfaSetupPage          from "./pages/MfaSetupPage";
 
 // ── Admin ──────────────────────────────────────────────────────────────────
 import AdminLogin from "./admin/AdminLogin";
@@ -57,6 +61,12 @@ function NavLink({ to, label, icon }) {
 
 function MainLayout() {
   const { user, logout } = useUser();
+  const location = useLocation();
+
+  // Public auth routes — accessible without login
+  if (location.pathname === "/auth/verify-email") return <AuthVerifyEmailPage />;
+  if (location.pathname === "/auth/password-reset") return <AuthPasswordResetPage />;
+  if (location.pathname === "/auth/google/finish")  return <AuthGoogleFinishPage />;
 
   if (!user) {
     return <AuthPage />;
@@ -139,6 +149,9 @@ function MainLayout() {
 
           {/* 1週間後フォローアップ（Step K）*/}
           <Route path="/followup"       element={<FollowupPage />} />
+
+          {/* Auth (logged-in) */}
+          <Route path="/auth/mfa-setup" element={<MfaSetupPage />} />
 
           {/* 既存ルート */}
           <Route path="/survey"         element={<SurveyPage />} />

@@ -36,14 +36,20 @@ from api.models.schemas import (
     AuthTokenResponse,
     UserResponse,
 )
-from api.services import auth_service, email_service
+from api.services import auth_service, email_service, totp_service
 from api.services.rate_limit import (
     LIMIT_EMAIL_VERIFY,
     LIMIT_LOGIN,
+    LIMIT_MFA_CHALLENGE,
     LIMIT_PASSWORD_RESET,
     LIMIT_REGISTER,
     LIMITER,
 )
+from api.models.schemas import (
+    AuthMfaSetupResponse,
+    AuthMfaVerify,
+)
+import jwt as _pyjwt  # for MFA challenge token decoding
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -320,3 +326,148 @@ async def password_reset_confirm(
     logger.info(f"[auth] password reset confirmed user_id={user.id}")
 
     return AuthSimpleMessage(ok=True, message="パスワードを再設定しました。再度ログインしてください。")
+
+
+# ════════════════════════════════════════════════════════════════════════
+# MFA (TOTP) — P1
+# ════════════════════════════════════════════════════════════════════════
+
+@router.post("/mfa/setup", response_model=AuthMfaSetupResponse)
+async def mfa_setup(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate a fresh TOTP secret + QR. Secret is saved tentatively;
+    user must call /mfa/verify with a valid code to actually enable MFA.
+    """
+    secret, uri, qr = totp_service.setup(account_name=user.email or user.name)
+    user.totp_secret = secret
+    user.mfa_enabled = False  # not enabled until verify confirms
+    await db.flush()
+    return AuthMfaSetupResponse(secret=secret, otpauth_uri=uri, qr_code_data_url=qr)
+
+
+@router.post("/mfa/verify", response_model=AuthSimpleMessage)
+async def mfa_verify(
+    data: AuthMfaVerify,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Confirm the TOTP code matches the pending secret and enable MFA."""
+    if not user.totp_secret:
+        raise HTTPException(status_code=400, detail="MFA setup not initiated")
+    if not totp_service.verify_code(user.totp_secret, data.code):
+        raise HTTPException(status_code=400, detail="無効なコードです")
+    user.mfa_enabled = True
+    # Revoke all existing refresh tokens for security
+    await auth_service.revoke_all_user_refresh_tokens(db, user.id)
+    await db.flush()
+    logger.info(f"[auth] MFA enabled user_id={user.id}")
+    return AuthSimpleMessage(ok=True, message="MFAを有効化しました。再度ログインしてください。")
+
+
+@router.post("/mfa/disable", response_model=AuthSimpleMessage)
+async def mfa_disable(
+    data: AuthMfaVerify,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Require a valid TOTP code to disable MFA (prevents accidental disable)."""
+    if not user.mfa_enabled or not user.totp_secret:
+        raise HTTPException(status_code=400, detail="MFAは有効化されていません")
+    if not totp_service.verify_code(user.totp_secret, data.code):
+        raise HTTPException(status_code=400, detail="無効なコードです")
+    user.mfa_enabled = False
+    user.totp_secret = None
+    await db.flush()
+    logger.info(f"[auth] MFA disabled user_id={user.id}")
+    return AuthSimpleMessage(ok=True, message="MFAを無効化しました。")
+
+
+@router.post("/mfa/challenge", response_model=AuthTokenResponse)
+@LIMITER.limit(LIMIT_MFA_CHALLENGE)
+async def mfa_challenge(
+    request: Request,
+    data: AuthMfaChallenge,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Step 2 of MFA login: present the mfa_challenge_token from /auth/login
+    along with a 6-digit TOTP code → receive JWT pair.
+    """
+    try:
+        payload = auth_service.decode_mfa_challenge_token(data.mfa_challenge_token)
+    except _pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="MFAチャレンジが期限切れです。再度ログインしてください。")
+    except _pyjwt.PyJWTError:
+        raise HTTPException(status_code=400, detail="無効なMFAチャレンジトークンです")
+
+    user_id = int(payload["sub"])
+    user = await auth_service.get_user_by_id(db, user_id)
+    if not user or not user.mfa_enabled or not user.totp_secret:
+        raise HTTPException(status_code=400, detail="MFA設定が見つかりません")
+
+    if not totp_service.verify_code(user.totp_secret, data.code):
+        raise HTTPException(status_code=401, detail="無効なコードです")
+
+    return await _build_token_response(db, user, request_meta=get_request_meta(request))
+
+
+# ════════════════════════════════════════════════════════════════════════
+# Google OAuth — P2
+# ════════════════════════════════════════════════════════════════════════
+
+from fastapi.responses import RedirectResponse
+from api.services import oauth_service
+
+
+@router.get("/google")
+async def google_authorize():
+    """Redirect to Google's OAuth consent page."""
+    if not settings.google_oauth_enabled:
+        raise HTTPException(status_code=503, detail="Google OAuth is not configured")
+    url, _state = oauth_service.authorize_url()
+    return RedirectResponse(url=url, status_code=302)
+
+
+@router.get("/google/callback")
+async def google_callback(
+    request: Request,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Handle Google's redirect-back. Exchange code → userinfo → create/link user
+    → issue JWT pair → redirect to frontend with tokens in URL fragment.
+    """
+    if error:
+        return RedirectResponse(
+            url=f"{settings.frontend_url.rstrip('/')}/login?oauth_error={error}",
+            status_code=302,
+        )
+    if not code or not state:
+        raise HTTPException(status_code=400, detail="missing code or state")
+    if not oauth_service.consume_state(state):
+        raise HTTPException(status_code=400, detail="invalid state (CSRF protection)")
+
+    userinfo = await oauth_service.exchange_code_for_userinfo(code)
+    if not userinfo:
+        raise HTTPException(status_code=400, detail="failed to fetch Google profile")
+
+    user = await oauth_service.upsert_google_user(db, userinfo)
+
+    # Issue tokens, then redirect to frontend with them in the fragment
+    # (fragments don't reach servers/logs).
+    token_resp = await _build_token_response(
+        db, user, request_meta=get_request_meta(request)
+    )
+    redirect_url = (
+        f"{settings.frontend_url.rstrip('/')}/auth/google/finish"
+        f"#access_token={token_resp.access_token}"
+        f"&refresh_token={token_resp.refresh_token}"
+        f"&expires_in={token_resp.expires_in}"
+    )
+    return RedirectResponse(url=redirect_url, status_code=302)

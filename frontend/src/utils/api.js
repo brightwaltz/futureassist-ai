@@ -16,14 +16,82 @@ function getWebSocketURL() {
   return `${protocol}//${window.location.host}/ws/chat`;
 }
 
+// ─── Token management (JWT access + refresh rotation) ───
+
+const ACCESS_KEY  = "futureassist_access_token";
+const REFRESH_KEY = "futureassist_refresh_token";
+
+function safeRead(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function safeWrite(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function safeRemove(k) { try { localStorage.removeItem(k); } catch {} }
+
+export const tokens = {
+  getAccess:  () => safeRead(ACCESS_KEY),
+  getRefresh: () => safeRead(REFRESH_KEY),
+  set: (access, refresh) => {
+    safeWrite(ACCESS_KEY, access);
+    safeWrite(REFRESH_KEY, refresh);
+  },
+  clear: () => {
+    safeRemove(ACCESS_KEY);
+    safeRemove(REFRESH_KEY);
+  },
+};
+
+let _refreshing = null;  // single-flight refresh promise
+
+async function tryRefresh() {
+  if (_refreshing) return _refreshing;
+  const rt = tokens.getRefresh();
+  if (!rt) return null;
+  _refreshing = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      if (!res.ok) {
+        tokens.clear();
+        return null;
+      }
+      const j = await res.json();
+      tokens.set(j.access_token, j.refresh_token);
+      return j.access_token;
+    } catch {
+      return null;
+    } finally {
+      _refreshing = null;
+    }
+  })();
+  return _refreshing;
+}
+
 // ─── REST API ───
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
-  const response = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options,
-  });
+  const buildHeaders = () => {
+    const h = { "Content-Type": "application/json", ...options.headers };
+    const access = tokens.getAccess();
+    if (access && !h.Authorization) h.Authorization = `Bearer ${access}`;
+    return h;
+  };
+
+  let response = await fetch(url, { ...options, headers: buildHeaders() });
+
+  // 401 → try one refresh + retry
+  if (response.status === 401 && tokens.getRefresh() && !options._retried) {
+    const newAccess = await tryRefresh();
+    if (newAccess) {
+      response = await fetch(url, {
+        ...options,
+        headers: { ...buildHeaders(), Authorization: `Bearer ${newAccess}` },
+        _retried: true,
+      });
+    }
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Request failed" }));
     throw new Error(error.detail || `HTTP ${response.status}`);
@@ -32,11 +100,37 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  // Users
+  // Users (legacy passwordless endpoint kept for backward compat)
   createUser: (data) => request("/users/", { method: "POST", body: JSON.stringify(data) }),
   getUser: (id) => request(`/users/${id}`),
   loginUser: (data) => request("/users/login", { method: "POST", body: JSON.stringify(data) }),
   updateUser: (id, data) => request(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  // ─── Auth (P0/P1/P2) ───
+  authRegister: (data) => request("/auth/register", { method: "POST", body: JSON.stringify(data) }),
+  authLogin: (data)    => request("/auth/login",    { method: "POST", body: JSON.stringify(data) }),
+  authMe: ()           => request("/auth/me"),
+  authLogout: () => {
+    const rt = tokens.getRefresh();
+    return request("/auth/logout", { method: "POST", body: JSON.stringify({ refresh_token: rt || "" }) })
+      .finally(() => tokens.clear());
+  },
+  authVerifyEmail: (token) =>
+    request("/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+  authPasswordResetRequest: (email) =>
+    request("/auth/password-reset", { method: "POST", body: JSON.stringify({ email }) }),
+  authPasswordResetConfirm: (token, new_password) =>
+    request("/auth/password-reset/confirm", {
+      method: "POST", body: JSON.stringify({ token, new_password }),
+    }),
+  // MFA
+  authMfaSetup:   ()         => request("/auth/mfa/setup",   { method: "POST" }),
+  authMfaVerify:  (code)     => request("/auth/mfa/verify",  { method: "POST", body: JSON.stringify({ code }) }),
+  authMfaDisable: (code)     => request("/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) }),
+  authMfaChallenge: (mfa_challenge_token, code) =>
+    request("/auth/mfa/challenge", {
+      method: "POST", body: JSON.stringify({ mfa_challenge_token, code }),
+    }),
 
   // User conversations
   getUserConversations: (userId, page = 1) => request(`/users/${userId}/conversations?page=${page}`),
