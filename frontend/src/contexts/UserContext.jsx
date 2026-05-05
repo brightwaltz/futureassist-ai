@@ -3,40 +3,60 @@ import { api } from "../utils/api";
 
 const UserContext = createContext(null);
 
+const STORAGE_KEY = "futureassist_user";
+
+function safeRead() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeWrite(u) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+  } catch {
+    /* iframe sandbox / private mode — fall back to in-memory state */
+  }
+}
+
+function safeRemove() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* see safeWrite */
+  }
+}
+
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem("futureassist_user");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(safeRead);
 
   const login = async (email) => {
     const u = await api.loginUser({ email });
     setUser(u);
-    localStorage.setItem("futureassist_user", JSON.stringify(u));
+    safeWrite(u);
     return u;
   };
 
   const register = async (data) => {
     const u = await api.createUser(data);
     setUser(u);
-    localStorage.setItem("futureassist_user", JSON.stringify(u));
+    safeWrite(u);
     return u;
   };
 
   const updateProfile = async (data) => {
     const u = await api.updateUser(user.id, data);
     setUser(u);
-    localStorage.setItem("futureassist_user", JSON.stringify(u));
+    safeWrite(u);
     return u;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("futureassist_user");
+    safeRemove();
   };
 
   return (

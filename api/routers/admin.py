@@ -22,6 +22,7 @@ from api.database import get_db
 from api.models.orm import (
     Tenant, Conversation, ConversationMessage,
     SurveyResponse as SurveyResponseModel,
+    QuestionBankEntry,
     Survey, User,
 )
 
@@ -225,6 +226,20 @@ async def get_conversation(
     }
 
 
+# ─── アンケート質問テキスト定数マップ（SurveyForm.jsx と同期）───
+# survey_responses.question_text が null の場合に使うハードコードフォールバック
+_SURVEY_QUESTION_TEXTS: dict[str, str] = {
+    "1": "現在の生活全体にどの程度満足していますか？",
+    "2": "仕事と私生活のバランスに満足していますか？",
+    "3": "最近のストレスの程度を教えてください",
+    "4": "最近、ポジティブな気持ちで過ごした時間はどれくらいありましたか？",
+    "5": "今のエネルギー・活力のレベルを教えてください",
+    "6": "今年の健康診断で改善が見られた項目はありましたか？",
+    "7": "未来アシストAI を利用したことはありますか？",
+    "8": "未来アシストAI を利用して自由に使える時間は、増えましたか？",
+    "9": "未来アシストAI を利用して自由に使えるお金は、増えましたか？",
+}
+
 # ─── GET /api/admin/{tenant_slug}/surveys/stats ───
 
 @router.get("/{tenant_slug}/surveys/stats")
@@ -233,9 +248,13 @@ async def get_survey_stats(
     db: AsyncSession = Depends(get_db),
     _admin: str = Depends(verify_admin),
 ):
-    """Per-question aggregation: avg, stddev, count."""
+    """Per-question aggregation: avg, stddev, count.
+    question_text は survey_responses に保存されていない場合も
+    question_bank テーブルから補完する。
+    """
     tid = await _resolve_tenant(tenant_slug, db)
 
+    # ─── 集計クエリ ───
     rows = (await db.execute(
         select(
             SurveyResponseModel.question_id,
@@ -252,11 +271,29 @@ async def get_survey_stats(
         )
     )).all()
 
+    # ─── question_bank からテキストを補完 ───
+    # question_id（文字列 "1","2",…）と question_bank.display_order または id を照合
+    qb_rows = (await db.execute(
+        select(QuestionBankEntry.id, QuestionBankEntry.question_text)
+        .order_by(QuestionBankEntry.display_order, QuestionBankEntry.id)
+    )).all()
+    # id を文字列キーとして辞書化
+    qb_map: dict[str, str] = {str(q.id): q.question_text for q in qb_rows}
+
     return {
         "questions": [
             {
                 "question_id": r.question_id,
-                "question_text": r.question_text,
+                # 優先順: survey_responses.question_text
+                #        → question_bank テーブル
+                #        → ハードコード定数マップ (SurveyForm.jsx と同期)
+                #        → フォールバック
+                "question_text": (
+                    r.question_text
+                    or qb_map.get(str(r.question_id))
+                    or _SURVEY_QUESTION_TEXTS.get(str(r.question_id))
+                    or f"質問 {r.question_id}"
+                ),
                 "avg_value": round(r.avg_value, 2) if r.avg_value is not None else None,
                 "stddev_value": round(r.stddev_value, 2) if r.stddev_value is not None else None,
                 "response_count": r.response_count,

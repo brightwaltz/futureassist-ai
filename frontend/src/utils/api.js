@@ -74,6 +74,9 @@ export const api = {
   },
   getTopics: () => request("/public-sites/topics"),
 
+  // Life Ability 5要素スコア履歴（Phase 2 API）
+  getLifeAbilityHistory: (userId) => request(`/survey/life-ability/${userId}`),
+
   // Health
   healthCheck: () => request("/health"),
 

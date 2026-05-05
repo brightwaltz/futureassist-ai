@@ -113,6 +113,41 @@ export async function clusterConversations(slug = "default", params = {}) {
   return res.json();
 }
 
+// ─── ROI & HCM Analytics ───────────────────────────────────────────────────
+
+export async function getRoiSummary(slug = "default") {
+  const res = await adminFetch(`/api/roi/summary?tenant_slug=${slug}`);
+  if (!res.ok) throw new Error("ROIデータの取得に失敗しました");
+  return res.json();
+}
+
+export async function calculateRoi(slug = "default", params = {}) {
+  const res = await adminFetch("/api/roi/calculate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tenant_slug: slug, ...params }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "ROI算出に失敗しました");
+  }
+  return res.json();
+}
+
+export async function getDashboardAnalytics(slug = "default") {
+  const res = await adminFetch(`/api/roi/dashboard-analytics?tenant_slug=${slug}`);
+  if (!res.ok) throw new Error("セグメント分析データの取得に失敗しました");
+  return res.json();
+}
+
+export async function refreshDashboardAnalytics() {
+  const res = await adminFetch("/api/roi/refresh-analytics", { method: "POST" });
+  if (!res.ok) throw new Error("集計ビューのリフレッシュに失敗しました");
+  return res.json();
+}
+
+// ─── Session ───────────────────────────────────────────────────────────────
+
 export function logout() {
   sessionStorage.removeItem(STORAGE_KEY);
   window.location.href = "/admin";

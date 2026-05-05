@@ -284,3 +284,55 @@ class SurveyResponse(Base):
     __table_args__ = (
         Index("ix_survey_responses_tenant_created", "tenant_id", created_at.desc()),
     )
+
+
+# ─── v3.0 HCM models ───
+
+class LifeAbilityScore(Base):
+    """Life Ability 5要素スコア履歴。user_ext_id(UUID)のみ使用し内部IDを露出しない。"""
+    __tablename__ = "life_ability_scores"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_ext_id = Column(UUID(as_uuid=True), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True)
+    s1_info_org = Column(Float)      # ①情報整理力
+    s2_decision = Column(Float)      # ②意思決定納得度
+    s3_action = Column(Float)        # ③行動移行力
+    s4_stability = Column(Float)     # ④生活運用安定性
+    s5_resource = Column(Float)      # ⑤可処分リソース創出力
+    composite_score = Column(Float)
+    ema_score = Column(Float)        # 指数移動平均
+    source = Column(Text, default="survey")
+    survey_id = Column(UUID(as_uuid=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_la_scores_user", "user_ext_id", "created_at"),
+        Index("ix_la_scores_tenant", "tenant_id", "created_at"),
+    )
+
+
+class RoiRecord(Base):
+    """ROI・損失コスト算出記録。"""
+    __tablename__ = "roi_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
+    period_start = Column(DateTime, nullable=False)
+    period_end = Column(DateTime, nullable=False)
+    presenteeism_loss_jpy = Column(Float)
+    absenteeism_loss_jpy = Column(Float)
+    estimated_roi_jpy = Column(Float)
+    roi_ratio = Column(Float)
+    affected_headcount = Column(Integer)
+    avg_daily_wage_jpy = Column(Float)
+    avg_la_score_before = Column(Float)
+    avg_la_score_after = Column(Float)
+    intervention_cost_jpy = Column(Float)
+    metadata_ = Column("metadata", JSONB, default=dict)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_roi_records_tenant", "tenant_id", "period_start"),
+        UniqueConstraint("tenant_id", "period_start", "period_end", name="uq_roi_period"),
+    )

@@ -43,6 +43,7 @@ class UserResponse(BaseModel):
     id: int
     external_id: UUID
     name: str
+    email: Optional[str] = None
     age_group: Optional[str]
     company: Optional[str] = None
     department: Optional[str] = None
@@ -95,6 +96,10 @@ class ChatResponse(BaseModel):
     next_question: Optional[str] = None
     emotion_label: Optional[str] = None
     emotion_score: Optional[float] = None
+    # Phase 2 追加フィールド（フロントエンドは無視しても OK、後方互換あり）
+    agent_type: Optional[str] = None
+    confidence: Optional[float] = None
+    held: Optional[bool] = None
 
 
 # ─── Surveys ───

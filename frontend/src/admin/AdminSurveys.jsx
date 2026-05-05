@@ -53,13 +53,16 @@ export default function AdminSurveys() {
     );
   }
 
-  const chartData = (stats?.questions || []).map((q) => ({
-    name: q.question_text.length > 20 ? q.question_text.slice(0, 20) + "…" : q.question_text,
-    fullName: q.question_text,
-    avg: parseFloat(q.avg_value?.toFixed(2) ?? 0),
-    stddev: parseFloat(q.stddev_value?.toFixed(2) ?? 0),
-    count: q.response_count ?? 0,
-  }));
+  const chartData = (stats?.questions || []).map((q) => {
+    const text = q.question_text || `質問 ${q.question_id}`;
+    return {
+      name: text.length > 20 ? text.slice(0, 20) + "…" : text,
+      fullName: text,
+      avg: parseFloat(q.avg_value?.toFixed(2) ?? 0),
+      stddev: parseFloat(q.stddev_value?.toFixed(2) ?? 0),
+      count: q.response_count ?? 0,
+    };
+  });
 
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
@@ -128,7 +131,7 @@ export default function AdminSurveys() {
           <tbody className="divide-y divide-gray-100">
             {(stats?.questions || []).map((q) => (
               <tr key={q.question_id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-700">{q.question_text}</td>
+                <td className="px-4 py-3 text-gray-700">{q.question_text || `質問 ${q.question_id}`}</td>
                 <td className="px-4 py-3 text-right font-medium text-gray-900">
                   {q.avg_value?.toFixed(2) ?? "-"}
                 </td>
